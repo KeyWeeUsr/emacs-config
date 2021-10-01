@@ -1,6 +1,6 @@
 ;; .emacs
 ;;
-;; Copyright (C) 2016 - 2017, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
+;; Copyright (C) 2016 - 2021, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 ;;
 ;; Author: KeyWeeUsr
 ;; URL: https://github.com/KeyWeeUsr/emacs-config
@@ -47,6 +47,8 @@
 (use-package brainfuck-mode :ensure brainfuck-mode)
 (use-package diminish :ensure diminish)
 (use-package popup :ensure popup)
+(use-package php-mode :ensure php-mode)
+(use-package gradle-mode :ensure gradle-mode)
 
 ;; Initialize available packages
 (package-initialize)
@@ -74,6 +76,9 @@
  '(lambda ()
     (electric-indent-local-mode t)))
 
+;; allow dead-acute + ibus for japanese
+(require 'iso-transl)
+
 ;; Customizing
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -82,26 +87,29 @@
  ;; If there is more than one, they won't work right.
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
- ;; C K&R with edits ftw
  '(c-basic-indent 4)
  '(c-basic-offset 4)
  '(c-default-style "k&r")
- ;; printf(
- ;;     "blob"
- ;;      );
- ;; well, except this crap ^
  '(c-offsets-alist (quote ((arglist-close c-lineup-close-paren))))
- ;; C K&R end
  '(c-set-offset (quote arglist-close) t)
  '(column-number-mode t)
  '(custom-enabled-themes (quote (wombat)))
  '(delete-selection-mode t)
  '(desktop-save-mode t)
+ '(ede-project-directories (quote ("/tmp")))
+ '(fill-column 79)
  '(fringe-mode nil nil (fringe))
  '(indent-tabs-mode nil)
  '(indicate-empty-lines t)
+ '(js-indent-level 4)
+ '(org-startup-truncated nil)
+ '(org-support-shift-select t)
+ '(package-selected-packages
+   (quote
+    (wc-mode aas ## csharp-mode org-d20 yaml-mode rjsx-mode flyspell-correct poly-rst 2048-game gradle-mode php-mode diminish brainfuck-mode ascii-art-to-unicode langdoc auto-complete use-package)))
  '(save-place t nil (saveplace))
  '(scroll-bar-mode nil)
+ '(sgml-basic-offset 4)
  '(show-paren-mode t)
  '(tab-stop-list (number-sequence 4 200 4))
  '(tab-width 4)
@@ -167,3 +175,4 @@
              (electric-indent-local-mode -1)
              )
           )
+(put 'downcase-region 'disabled nil)
