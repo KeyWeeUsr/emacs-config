@@ -359,6 +359,9 @@
             (latex . t)
             (R . t)
             (dot . t)))
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     org-babel-load-languages)
     (setq org-edit-src-content-indentation 0)
     (setq org-latex-hyperref-template
           "\\hypersetup{
