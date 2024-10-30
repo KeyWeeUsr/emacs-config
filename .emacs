@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2024, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 4.0
+;; Version: 4.1
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -149,7 +149,8 @@
 (use-package keepass-mode
   :ensure t
   :config
-  (let* ((db-path (read-file-name-default "KeePass DB: " nil ""))
+  (let* ((user (user-full-name))
+         (db-path (read-file-name-default "KeePass DB: " nil ""))
 	     (keepass-mode-db (unless (string= "" db-path)
                             (expand-file-name db-path)))
 	     (keepass-mode-password
@@ -157,39 +158,40 @@
          (const-username "UserName")
          (const-password "Password")
          (const-notes "Notes"))
+    (fset 'cred `(lambda (what type)
+                   (keepass-mode-get
+                    type (format "emacs-creds/%s-%s" what ,user))))
     (require 'subr-x)
     (setq syncthing-default-server-token
-          (when keepass-mode-db
-            (keepass-mode-get
-             const-password
-             (format "emacs-creds/syncthing-token-%s" (user-full-name)))))
+          (when keepass-mode-db (cred "syncthing-token" const-password)))
     ;; Only unless found set to default, otherwise nil
     (setq elfeed-db-directory
           (when keepass-mode-db
-            (or (keepass-mode-get
-                 const-username
-                 (format "emacs-creds/elfeed-db-dir-%s" (user-full-name)))
-                "~/elfeed")))
+            (or (cred "elfeed-db-dir" const-username) "~/elfeed")))
     ;; Only unless found set to default, otherwise nil
     (setq my-org-roam-directory
           (when keepass-mode-db
-            (or (keepass-mode-get
-                 const-username
-                 (format "emacs-creds/org-roam-dir-%s" (user-full-name)))
+            (or (cred "org-roam-dir" const-username)
                 (expand-file-name "roam" user-emacs-directory))))
     (setq my-org-roam-templates
           (when keepass-mode-db
             (mapcar (lambda (item) (split-string item ";"))
-                    (split-string (keepass-mode-get
-                                   const-notes
-                                   (format "emacs-creds/org-roam-templates-%s"
-                                           (user-full-name))) ";;"))))
+                    (split-string
+                     (cred "org-roam-templates" const-notes) ";;"))))
     (setq my-epa-file-encrypt-to
+          (when keepass-mode-db (cred "epa-file-encrypt-to" const-username)))
+    (setq my-gpg-id (when keepass-mode-db (cred "gpg-main" const-notes)))
+    (let ((tmp nil) (epg-user-id my-gpg-id))
+      (unwind-protect
           (when keepass-mode-db
-            (keepass-mode-get
-             const-username
-             (format "emacs-creds/epa-file-encrypt-to-%s"
-                     (user-full-name)))))))
+            (setq tmp (cred "gpg-main" const-password))
+            (kill-new tmp)
+            (condition-case nil
+                (epg-sign-string (epg-make-context) "\n")
+              (t (warn "Pre-loading GPG key failed"))))
+        (setq kill-ring (delete tmp kill-ring))
+        (kill-new "ok")))
+    (makunbound 'cred)))
 
 (use-package syncthing
   :ensure t
