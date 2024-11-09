@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2024, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 4.2
+;; Version: 4.3
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -66,6 +66,26 @@
   "Current date for file migrations."
   (interactive)
   (shell-command "date \"+%Y%m%d%H%M%S\""))
+
+(defun my-open-pr ()
+  "Follow a link from git remote to open a PR."
+  (interactive)
+  (save-excursion
+    (unwind-protect
+        (progn
+          (term-mode)
+          (re-search-backward "Create a pull request")
+          (re-search-forward "http") (re-search-backward "http")
+          (unwind-protect
+              (progn
+                (push-mark)
+                (re-search-forward "^remote:") (re-search-backward "^remote:")
+                (backward-char 1)
+                (browse-url
+                 (string-replace "\n" "" (buffer-substring-no-properties
+                                          (mark) (point)))))
+            (pop-mark)))
+      (term-char-mode))))
 
 (defun my-move (left-top)
   "Move window to comma-separated LEFT-TOP location."
@@ -381,7 +401,8 @@
             ("M-," . term-send-raw)
             ("M-." . comint-dynamic-complete)
             ("C-c C-j" . term-mode)
-            ("C-c C-k" . term-char-mode)))))
+            ("C-c C-k" . term-char-mode)
+            ("C-c C-o" . my-open-pr)))))
 
 (use-package wc-mode :ensure t)
 (use-package org
