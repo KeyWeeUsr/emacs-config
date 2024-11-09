@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2024, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 4.1
+;; Version: 4.2
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -39,7 +39,7 @@
  '(indicate-empty-lines t)
  '(ispell-dictionary nil)
  '(package-selected-packages
-   '(dbml-mode kivy-mode syncthing keepass-mode ace-window curl-to-elisp ecukes dedicated docker-compose-mode exec-path-from-shell digit-groups graphviz-dot-mode cmake-mode yaml-mode which-key wc-mode v-mode use-package undercover typewriter-roll-mode terraform-mode ssh-config-mode php-mode package-lint osm org-web-tools org-transclusion org-roam-ui org-roam-timestamps org-epa-gpg ob-base64 multi-term mermaid-docker-mode markdown-mode htmlize helpful gradle-mode go-mode gnu-elpa-keyring-update ess elfeed-tube-mpv elfeed-org dockerfile-mode dired-duplicates diminish define-it decor cython-mode company-quickhelp brainfuck-mode auto-complete ascii-art-to-unicode))
+   '(httprepl dbml-mode kivy-mode syncthing keepass-mode ace-window curl-to-elisp ecukes dedicated docker-compose-mode exec-path-from-shell digit-groups graphviz-dot-mode cmake-mode yaml-mode which-key wc-mode v-mode use-package undercover typewriter-roll-mode terraform-mode ssh-config-mode php-mode package-lint osm org-web-tools org-transclusion org-roam-ui org-roam-timestamps org-epa-gpg ob-base64 multi-term mermaid-docker-mode markdown-mode htmlize helpful gradle-mode go-mode gnu-elpa-keyring-update ess elfeed-tube-mpv elfeed-org dockerfile-mode dired-duplicates diminish define-it decor cython-mode company-quickhelp brainfuck-mode auto-complete ascii-art-to-unicode))
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(show-paren-mode t nil (paren))
@@ -146,9 +146,31 @@
   (package-install 'use-package))
 (require 'use-package)
 
-(use-package keepass-mode
-  :ensure t
-  :config
+(defun my-cache-gpg-key (&optional keep ctx)
+  (interactive)
+  (unless ctx (setq ctx (epg-make-context)))
+  (setf (epg-context-pinentry-mode ctx) 'loopback)
+
+  (if (epg-sign-string ctx "\n") (message "Pre-loaded GPG key")
+    (warn "Pre-loading GPG key failed"))
+
+  (when keep (setq my-cache-gpg-key-timer
+                   (run-with-timer 1 290 #'my-cache-gpg-key))))
+
+(defun my-cache-gpg-progress
+    (context operation display-chr current total data)
+  "From epg-context-set-progress-callback."
+  (when (= current total)
+    (run-at-time
+     2 nil (lambda (&rest _)
+             (setq kill-ring (cdr kill-ring))
+             (when (display-graphic-p) (gui-select-text "ok"))
+             (message "Clipboard cleared")))))
+
+(defun my-keepass-init ()
+  (interactive)
+  (cancel-function-timers 'my-cache-gpg-key)
+  (setq my-cache-gpg-key-timer nil)
   (let* ((user (user-full-name))
          (db-path (read-file-name-default "KeePass DB: " nil ""))
 	     (keepass-mode-db (unless (string= "" db-path)
@@ -181,17 +203,31 @@
     (setq my-epa-file-encrypt-to
           (when keepass-mode-db (cred "epa-file-encrypt-to" const-username)))
     (setq my-gpg-id (when keepass-mode-db (cred "gpg-main" const-notes)))
-    (let ((tmp nil) (epg-user-id my-gpg-id))
+    (let ((tmp nil) (epg-user-id my-gpg-id) (ctx (epg-make-context))
+          (select-enable-clipboard t) (select-enable-primary t))
+      (epg-context-set-progress-callback ctx #'my-cache-gpg-progress)
       (unwind-protect
           (when keepass-mode-db
             (setq tmp (cred "gpg-main" const-password))
+            ;; trim kill-ring
+            (setq kill-ring
+                  (butlast kill-ring
+                           (- (length kill-ring) (1- kill-ring-max))))
+            ;; cleared in progress func
             (kill-new tmp)
-            (condition-case nil
-                (epg-sign-string (epg-make-context) "\n")
-              (t (warn "Pre-loading GPG key failed"))))
-        (setq kill-ring (delete tmp kill-ring))
-        (kill-new "ok")))
-    (makunbound 'cred)))
+            (when (display-graphic-p)
+              (gui-select-text tmp))
+            (condition-case err (my-cache-gpg-key t ctx)
+              (t (warn "Pre-loading GPG key failed (%s)" err))))))
+    (makunbound 'cred))
+  (when (or (not (boundp 'my-gpg-id)) (null my-gpg-id))
+    (warn "KeePass init failed")))
+
+(use-package keepass-mode
+  :ensure t
+  :config
+  (unless (eq window-system 'android)
+    (my-keepass-init)))
 
 (use-package syncthing
   :ensure t
@@ -1002,6 +1038,8 @@
   (progn (global-set-key (kbd "M-o") #'ace-window)
          (add-hook 'term-mode-hook
                    (lambda () (keymap-set term-raw-map "M-o" #'ace-window)))))
+(use-package httprepl
+  :ensure t)
 
 ;; Stop the `list-processes' SIGKILL insanity
 (defun terminate-process (proc)
