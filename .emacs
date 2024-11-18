@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2024, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 4.3
+;; Version: 4.4
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -100,6 +100,7 @@
 (when (eq window-system 'ns)
   (with-no-warnings
     (setq ns-right-alternative-modifier 'none))
+  (setq mac-right-option-modifier 'none)
   (advice-add 'ns-print-buffer :override (lambda (&rest _))
               '((name . "mac-keyboard")))
   (setq exec-path (append '("/opt/homebrew/bin") exec-path)))
@@ -187,11 +188,14 @@
              (when (display-graphic-p) (gui-select-text "ok"))
              (message "Clipboard cleared")))))
 
+(defun my-string-or (what default)
+  (if (string= "" what) default what))
+
 (defun my-keepass-init ()
   (interactive)
   (cancel-function-timers 'my-cache-gpg-key)
   (setq my-cache-gpg-key-timer nil)
-  (let* ((user (user-full-name))
+  (let* ((user (user-real-login-name))
          (db-path (read-file-name-default "KeePass DB: " nil ""))
 	     (keepass-mode-db (unless (string= "" db-path)
                             (expand-file-name db-path)))
@@ -206,15 +210,21 @@
     (require 'subr-x)
     (setq syncthing-default-server-token
           (when keepass-mode-db (cred "syncthing-token" const-password)))
+    (setq my-imgur-client-id
+          (when keepass-mode-db (cred "imgur-api" const-username)))
+    (setq my-imgur-client-secret
+          (when keepass-mode-db (cred "imgur-api" const-password)))
+    (setq syncthing-default-server-token
+          (when keepass-mode-db (cred "syncthing-token" const-password)))
     ;; Only unless found set to default, otherwise nil
     (setq elfeed-db-directory
           (when keepass-mode-db
-            (or (cred "elfeed-db-dir" const-username) "~/elfeed")))
+            (my-string-or (cred "elfeed-db-dir" const-username) "~/elfeed")))
     ;; Only unless found set to default, otherwise nil
     (setq my-org-roam-directory
           (when keepass-mode-db
-            (or (cred "org-roam-dir" const-username)
-                (expand-file-name "roam" user-emacs-directory))))
+            (my-string-or (cred "org-roam-dir" const-username)
+                          (expand-file-name "roam" user-emacs-directory))))
     (setq my-org-roam-templates
           (when keepass-mode-db
             (mapcar (lambda (item) (split-string item ";"))
