@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2024, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 4.4
+;; Version: 4.5
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -101,6 +101,9 @@
   (with-no-warnings
     (setq ns-right-alternative-modifier 'none))
   (setq mac-right-option-modifier 'none)
+  (with-no-warnings
+    (setq ns-command-modifier 'meta))
+  (setq mac-command-modifier 'meta)
   (advice-add 'ns-print-buffer :override (lambda (&rest _))
               '((name . "mac-keyboard")))
   (setq exec-path (append '("/opt/homebrew/bin") exec-path)))
