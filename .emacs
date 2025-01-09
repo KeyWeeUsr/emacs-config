@@ -1,9 +1,9 @@
 ;;; .emacs --- Emacs config -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016 - 2024, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
+;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 4.5
+;; Version: 4.6
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -259,8 +259,16 @@
 (use-package keepass-mode
   :ensure t
   :config
-  (unless (eq window-system 'android)
-    (my-keepass-init)))
+  (if (not (eq window-system 'android))
+      (my-keepass-init)
+    (let ((vars '(elfeed-db-directory
+                  syncthing-default-server-token)))
+      (dolist (var vars)
+        (let* ((tmpl "Setting var '%s' [%S] ")
+               (current (when (boundp var) (symbol-value var)))
+               (new (read-string (format tmpl var current))))
+          (unless (string= new "")
+            (setf (symbol-value var) new)))))))
 
 (use-package syncthing
   :ensure t
@@ -413,8 +421,8 @@
             ("M-d" . term-send-delete-word)
             ("M-," . term-send-raw)
             ("M-." . comint-dynamic-complete)
-            ("C-c C-j" . term-mode)
-            ("C-c C-k" . term-char-mode)
+            ("C-c C-j" . (lambda () (interactive) (term-mode)))
+            ("C-c C-k" . (lambda () (interactive) (term-char-mode)))
             ("C-c C-o" . my-open-pr)))))
 
 (use-package wc-mode :ensure t)
