@@ -208,8 +208,11 @@
            (< emacs-minor-version 3))
   (setq org-preview-latex-default-process 'verbatim))
 
+(progn
+;; keepass
 (defun my-cache-gpg-key (&optional keep ctx)
   (interactive)
+  (eval-when-compile (require 'epg))
   (unless ctx (setq ctx (epg-make-context)))
   (setf (epg-context-pinentry-mode ctx) 'loopback)
 
@@ -222,6 +225,7 @@
 (defun my-cache-gpg-progress
     (context operation display-chr current total data)
   "From epg-context-set-progress-callback."
+  (ignore context operation display-chr data)
   (when (= current total)
     (run-at-time
      2 nil (lambda (&rest _)
@@ -234,6 +238,7 @@
 
 (defun my-keepass-init ()
   (interactive)
+  (eval-when-compile (require 'epg))
   (cancel-function-timers 'my-cache-gpg-key)
   (setq my-cache-gpg-key-timer nil)
   (let* ((user (user-real-login-name))
@@ -294,11 +299,14 @@
   (when (or (not (boundp 'my-gpg-id)) (null my-gpg-id))
     (warn "KeePass init failed")))
 
+(use-package epg
+  :ensure nil)
 (use-package keepass-mode
-  :ensure t
+  :ensure (:depth 1)
+  :after epg
   :config
   (if (not (eq window-system 'android))
-      (my-keepass-init)
+      (add-hook 'elpaca-after-init-hook #'my-keepass-init)
     (let ((vars '(elfeed-db-directory
                   syncthing-default-server-token)))
       (dolist (var vars)
@@ -307,9 +315,10 @@
                (new (read-string (format tmpl var current))))
           (unless (string= new "")
             (setf (symbol-value var) new)))))))
+) ;; keepass end
 
 (use-package syncthing
-  :ensure t
+  :ensure (:depth 1)
   :config
   (progn
     (setq syncthing-header-items
@@ -317,6 +326,7 @@
             "count-local-folders" "count-local-bytes" "count-listeners"
             "count-discovery" "uptime" "my-id" "version"))))
 
+(progn
 ;; Functions to auto-complete-mode everywhere
 (defun ac-onoff (flag)
   "Toggle function `auto-complete-mode' in all buffers with boolean FLAG."
@@ -329,14 +339,19 @@
 (defun acoff ()
   "Disable autocomplete in ALL buffers."
   (interactive) (ac-onoff -1))
+) ;; Functions to auto-complete-mode everywhere end
 
 ;; possibly unnecessary
 (use-package ansi-color
-  :ensure t
+  :ensure nil
   :config
   (progn
-    (setq ansi-color-faces-vector
-          [default default default italic underline success warning error])))
+    (let ((what
+           [default default default italic underline success warning error]))
+      (with-no-warnings
+        ;; obsoleted 28.1+
+        (setq ansi-color-faces-vector what))
+      (setq ansi-color-normal-colors-vector what))))
 ;; render ansi escape colors
 (defun ansi-color-region()
   "Interactive version of func."
@@ -344,7 +359,7 @@
   (ansi-color-apply-on-region (point-min) (point-max)))
 
 (use-package cc-mode
-  :ensure t
+  :ensure nil
   :config
   (progn
     (setq c-basic-indent 4) ;; TODO: does not exist?
@@ -352,29 +367,36 @@
     (setq c-default-style "k&r")
     (setq c-offsets-alist '((arglist-close . +)))
     (setq c-set-offset 'arglist-close)))
+
 (use-package simple
   :ensure nil  ;; bundled in Emacs
   :config (column-number-mode t))
+
 (use-package delsel
-  :ensure t
+  :ensure nil
   :config (delete-selection-mode t))
+
 (use-package auto-complete
-  :ensure t
+  :ensure (:depth 1)
   :config
   (progn
     (ac-config-default)
     (setq ac-use-menu-map t)
     (advice-add 'create-file-buffer
                 :after (lambda (&rest _) (acon)))))
+
 (use-package desktop
-  :ensure t
+  :ensure nil
   :config (desktop-save-mode t))
+
 (use-package dired
   :ensure nil  ;; bundled in Emacs
   :config (setq dired-listing-switches "-al"))
+
 (use-package fringe
   :ensure nil  ;; bundled in Emacs
   :config (fringe-mode 8))
+
 (use-package files
   :ensure nil  ;; bundled in Emacs
   :config
@@ -400,41 +422,49 @@
                 (wc-mode))
           (eval quote flymake-mode)
           (set . fill-column=79))))
+
 (use-package ispell
-  :ensure t
+  :ensure nil
   :config (setq ispell-dictionary nil))
+
 (use-package js
-  :ensure t
+  :ensure nil
   :config (setq js-indent-level 4))
+
 (use-package nxml-mode
   :ensure nil  ;; bundled in Emacs
   :config
   (progn
     (setq nxml-attribute-indent 4)
     (setq nxml-child-indent 4)))
+
 (use-package saveplace
   :ensure nil  ;; bundled in Emacs
   :config (setq save-place-mode t))
+
 (use-package sgml-mode
   :ensure nil  ;; bundled in Emacs
   :config (setq sgml-basic-offset 4))
-(use-package langdoc :ensure t)
-(use-package ascii-art-to-unicode :ensure t)
-(use-package bind-key :ensure t)
-(use-package brainfuck-mode :ensure t)
-(use-package diminish :ensure t)
-(use-package popup :ensure t)
-(use-package php-mode :ensure t)
-(use-package gradle-mode :ensure t)
-(use-package ssh-config-mode :ensure t)
-(use-package v-mode :ensure t)
+
+(use-package langdoc :ensure (:depth 1))
+(use-package ascii-art-to-unicode :ensure (:depth 1))
+(use-package bind-key :ensure nil)
+(use-package brainfuck-mode :ensure (:depth 1))
+(use-package diminish :ensure (:depth 1))
+(use-package popup :ensure (:depth 1))
+(use-package php-mode :ensure (:depth 1))
+(use-package gradle-mode :ensure (:depth 1))
+(use-package ssh-config-mode :ensure (:depth 1))
+(use-package v-mode :ensure (:depth 1))
+
 (use-package term
-  :ensure t
+  :ensure nil
   :config
   (progn
     (setq term-buffer-maximum-size 0)))
+
 (use-package multi-term
-  :ensure t
+  :ensure (:depth 1)
   :after term
   :config
   (progn
@@ -463,9 +493,10 @@
             ("C-c C-k" . (lambda () (interactive) (term-char-mode)))
             ("C-c C-o" . my-open-pr)))))
 
-(use-package wc-mode :ensure t)
+(use-package wc-mode :ensure (:depth 1))
+
 (use-package org
-  :ensure t
+  :ensure (:depth 1)
   :config
   (progn
     (setq org-agenda-files nil)
@@ -496,16 +527,19 @@
     (setq org-support-shift-select t)
     (setq org-src-tab-acts-natively t)))
 
+(progn
 ;; org-roam zettelkasten
 (defun my-set-org-roam-directory ()
   "Set `org-roam-directory'."
   (interactive)
   (setq org-roam-directory my-org-roam-directory))
+
 (use-package org-roam
-  :ensure t
+  :ensure (:depth 1)
   :after (keepass-mode org)
   :config
   (progn
+    ;; (setq org-roam-database-connector 'libsqlite3)
     (let ((my-org-roam-filename "%<%Y%m%d%H%M%S>-${id}.org.gpg")
           (my-org-roam-heading
            (format "-*- epa-file-encrypt-to: (%S); fill-column: 50 -*-"
@@ -547,35 +581,43 @@
                 ("C-c n t" . org-roam-tag-add)
                 ("C-c n a" . org-roam-alias-add)
                 ("C-c n l" . org-roam-buffer-toggle)))))
+) ;; org-roam zettelkasten
+
 (use-package org-roam-timestamps
-  :ensure t
+  :ensure (:depth 1)
   :after org-roam
   :config
   (progn
     (setq org-roam-timestamps-minimum-gap 60)
     (org-roam-timestamps-mode)))
+
 (use-package org-roam-ui
   :after org-roam
-  :ensure t
+  :ensure (:depth 1)
   ;; https://github.com/org-roam/org-roam-ui/issues/202
   :init (progn (add-to-list 'desktop-minor-mode-table
                             '(org-roam-ui-mode nil))
                (add-to-list 'desktop-minor-mode-table
                             '(org-roam-ui-follow-mode nil))
                (setq org-roam-ui-open-on-start nil)))
+
 (use-package decor
-  :ensure t
+  :ensure (:depth 1)
   :config (progn (decor-mode)
-                 (add-hook 'after-init-hook 'decor-all-frames-off)))
+                 (add-hook 'elpaca-after-init-hook 'decor-all-frames-off)))
+
 (use-package mermaid-mode
-  :ensure t)
+  :ensure (:depth 1))
+
 (use-package mermaid-docker-mode
-  :ensure t
+  :ensure (:depth 1)
   :after mermaid-mode
   :config (progn (setq mermaid-docker-external-viewer-bin "/usr/bin/xviewer")
                  (setq mermaid-docker-focus-steal-ms 100)))
+
 (use-package typewriter-roll-mode
-  :ensure t)
+  :ensure (:depth 1))
+
 
 ;; Separate plugins folder
 (let ((plugins-dir (expand-file-name "plugins" user-emacs-directory)))
@@ -583,46 +625,35 @@
   (add-to-list 'load-path plugins-dir))
 
 ;; Kivy .kv syntax plugin
-(let* ((name "kivy-mode.el")
-       (expected-digest "f876c71caa63c916ed49a78f6c521e28")
-       (dest (format "plugins/%s" name))
-       (raw "https://raw.githubusercontent.com")
-       (mode (format "kivy/kivy/master/kivy/tools/highlight/%s" name))
-       (full-dest (expand-file-name dest user-emacs-directory))
-       (digest ""))
-  (unless (file-exists-p full-dest)
-    (url-copy-file (format "%s/%s" raw mode) full-dest))
-  (setq digest
-        (md5 (with-temp-buffer
-               (insert-file-contents-literally full-dest)
-               (buffer-substring-no-properties (point-min) (point-max)))))
-  (if (not (string= expected-digest digest))
-      (warn "kivy-mode digest mismatch: %s != %s" expected-digest digest)
-    (use-package kivy-mode :ensure t)
-    (add-to-list 'auto-mode-alist '("\\.kv$" . kivy-mode))
-    (add-hook 'kivy-mode-hook (lambda () (electric-indent-local-mode t)))))
+(use-package kivy-mode
+  :ensure (:depth 1))
 
 (use-package iso-transl  ;; allow dead-acute + ibus for japanese
-  :ensure nil)  ;; bundled in Emacs
+  :ensure nil)
+;; bundled in Emacs
 
 (use-package epa-file  ;; encryption for .gpg files
   :ensure nil  ;; bundled in Emacs
   :init (unless window-system (setf epg-pinentry-mode 'loopback))
   :config (epa-file-enable))
+
 (use-package org-epa-gpg
-  :ensure t
+  :ensure (:depth 1)
   :after epa-file)
+
 (use-package ob-base64
-  :ensure t
+  :ensure (:depth 1)
   :after org
   :config
   (setf (alist-get 'base64 org-babel-load-languages) t))
-(use-package dbml-mode
-  :ensure t)
 
+(use-package dbml-mode
+  :ensure (:depth 1))
+
+(progn
 ;; elfeed customization
 (defun elfeed-search-untag-all-unread---reversed ()
-  "Reverse 'r' behavior in elfeed."
+  "Reverse \\='r' behavior in elfeed."
   (interactive)
   (progn
     (elfeed-search-untag-all-unread)
@@ -670,9 +701,10 @@
   (when current-prefix-arg
     (forward-line -1)
     (elfeed-search-tag-all-unread)))
+) ;; elfeed customization end
 
 (use-package elfeed
-  :ensure t
+  :ensure (:depth 1)
   :config
   (setq elfeed-search-filter "@2023-02-07T23:59 +unread ")
   :bind (:map elfeed-search-mode-map
@@ -683,21 +715,25 @@
   :bind (:map elfeed-show-mode-map
               ("C-c C-o" . elfeed-show-visit)))
 
+
+(progn
 ;; elfeed in org-mode
 (use-package shr
-  :ensure t
+  :ensure nil
   :config (setq shr-inhibit-images t))
+
 (use-package elfeed-org
-  :ensure t
+  :ensure (:depth 1)
   :after (elfeed shr)
   :config
   (progn
     (setq rmh-elfeed-org-files (list (format "%s.org" elfeed-db-directory)))
     (elfeed-org)))
+)  ;; elfeed in org-mode end
 
 ;; elfeed youtube
 (use-package elfeed-tube
-  :ensure t
+  :ensure (:depth 1)
   :after elfeed-org
   :demand t
   :config
@@ -714,16 +750,19 @@
          :map elfeed-search-mode-map
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)))
+
 ;; elfeed youtube local
 (use-package elfeed-tube-mpv
-  :ensure t
+  :ensure (:depth 1)
   :after elfeed-tube
   :bind (:map elfeed-show-mode-map
          ("C-c C-m" . elfeed-tube-mpv)
          ("C-c C-f" . elfeed-tube-mpv-follow-mode)
          ("C-c C-w" . elfeed-tube-mpv-where)))
+
 (use-package terraform-mode
-  :ensure t)
+  :ensure (:depth 1))
+
 
 ;; CUSTOM FUNCTIONS & BINDINGS
 (defun m()
@@ -733,13 +772,14 @@
 
 ;; Helpful
 (use-package helpful
-  :ensure t
+  :ensure (:depth 1)
   :config
   (progn
     (global-set-key (kbd "C-h f") #'helpful-callable)
     (global-set-key (kbd "C-h v") #'helpful-variable)
     (global-set-key (kbd "C-h k") #'helpful-key)
     (global-set-key (kbd "C-h x") #'helpful-command)))
+
 
 ;; View resizing
 (global-set-key (kbd "C-c <up>") 'shrink-window)
@@ -808,15 +848,17 @@
 
 ;; This causes the current time in the mode line to be displayed in
 (use-package time
-  :ensure t
+  :ensure nil
   :config
   (progn
     (setq display-time-string-forms
           '((propertize (concat 24-hours ":" minutes))))
     (display-time)))
+
 (use-package so-long
-  :ensure t
+  :ensure nil
   :config (global-so-long-mode))
+
 
 ;; something crashed in the upstream
 (defun v-build-tags())
@@ -825,12 +867,13 @@
 (use-package org-tempo
   :ensure nil  ;; bundled in Emacs
   :after org)
+
 (defun patch-org-insert-structure-template(type)
-  "Patched 'org-insert-structure-template' to prefix with #+name: ?"
+  "Patched \\='org-insert-structure-template' to prefix with #+name: ?"
   (when (string-match-p "src" type)
     (insert (format "#+name: %s" (read-string "Block name ")))))
 (defun patch-org-tempo-complete-tag(&rest _)
-  "Patched 'org-tempo-complete-tag' to prefix with #+name: ?"
+  "Patched \\='org-tempo-complete-tag' to prefix with #+name: ?"
   (when (string-match-p "#\\+begin_src" (thing-at-point 'line t))
     (progn
       (org-beginning-of-line)
@@ -882,6 +925,7 @@
   (interactive)
   (message (shell-command-to-string "mpv-playlist")))
 
+(progn
 ;; multi-term common
 ;; assumptions: C-x 2|3 = (split-window-below|right)
 ;; hence: lowest ID = top-left, highest = bot-right
@@ -960,7 +1004,7 @@
   "Rotate windows layout vertically."
   (interactive)
   (rotate-windows "v"))
-;; end multi-term common
+) ;; end multi-term common
 
 (defun my-org-roam-stop-and-clear ()
   "Stop Org Roam and clear everything unnecessary."
@@ -1103,23 +1147,28 @@
 
 ;; Popup for keybindings
 (use-package which-key
-  :ensure t
+  :ensure (:depth 1)
   :config (which-key-mode))
+
 (use-package company
-  :ensure t)
+  :ensure (:depth 1))
+
 (use-package company-quickhelp
-  :ensure t
+  :ensure (:depth 1)
   :after company)
+
 (use-package dockerfile-mode
-  :ensure t)
+  :ensure (:depth 1))
+
 (use-package ace-window
-  :ensure t
+  :ensure (:depth 1)
   :config
   (progn (global-set-key (kbd "M-o") #'ace-window)
          (add-hook 'term-mode-hook
                    (lambda () (keymap-set term-raw-map "M-o" #'ace-window)))))
+
 (use-package httprepl
-  :ensure t)
+  :ensure (:depth 1))
 
 ;; Stop the `list-processes' SIGKILL insanity
 (defun terminate-process (proc)
