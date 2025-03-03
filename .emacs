@@ -147,14 +147,21 @@
                (cadr (split-string left-top "," nil)))))
     (modify-frame-parameters (window-frame)
                              `((left . ,left) (top . ,top)))))
+(defun my-move-left () (interactive) (my-move "-2000,0"))
+(defun my-move-right () (interactive) (my-move "2000,0"))
+(defun my-move-top () (interactive) (my-move "0,1000"))
+(defun my-move-bottom () (interactive) (my-move "0,-1000"))
+(defun my-move-middle () (interactive) (my-move "-2000,0"))
+(defun my-move-center () (interactive) (my-move "-2000,0"))
+
+(progn
 ;; Fixes for MacOS
 (when (eq window-system 'ns)
   (with-no-warnings
-    (setq ns-right-alternative-modifier 'none))
-  (setq mac-right-option-modifier 'none)
-  (with-no-warnings
-    (setq ns-command-modifier 'meta))
-  (setq mac-command-modifier 'meta)
+    (setq ns-right-alternative-modifier 'none)
+    (setq mac-right-option-modifier 'none)
+    (setq ns-command-modifier 'meta)
+    (setq mac-command-modifier 'meta))
   (advice-add 'ns-print-buffer :override (lambda (&rest _))
               '((name . "mac-keyboard")))
   (setq exec-path (append '("/opt/homebrew/bin") exec-path)))
@@ -167,6 +174,7 @@
     (setq frame-resize-pixelwise t)
     (dotimes (_ 3)
       (toggle-frame-maximized))))
+) ;; Fixes for MacOS end
 
 (defun custom-exit ()
   "Run at exit."
