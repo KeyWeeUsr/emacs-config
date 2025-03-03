@@ -178,7 +178,7 @@
 
 (defun custom-exit ()
   "Run at exit."
-  (interactive)
+  (interactive "P")
   (progn
     (progn
       (message "Deleting MPV playlist")
@@ -186,7 +186,9 @@
       t)
     (progn
       (message "Deleting org-roam DB")
-      (when (boundp 'org-roam-db-location)
+      (if (not (boundp 'org-roam-db-location))
+          (progn (warn "Missing org-roam-db-location")
+                 (when current-prefix-arg t))
         (delete-file org-roam-db-location)
         (if (file-exists-p org-roam-db-location)
             (progn
