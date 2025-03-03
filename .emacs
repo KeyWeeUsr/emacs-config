@@ -90,7 +90,7 @@
  '(indicate-empty-lines t)
  '(ispell-dictionary nil)
  '(package-selected-packages
-   '(httprepl dbml-mode kivy-mode syncthing keepass-mode ace-window curl-to-elisp ecukes dedicated docker-compose-mode exec-path-from-shell digit-groups graphviz-dot-mode cmake-mode yaml-mode which-key wc-mode v-mode use-package undercover typewriter-roll-mode terraform-mode ssh-config-mode php-mode package-lint osm org-web-tools org-transclusion org-roam-ui org-roam-timestamps org-epa-gpg ob-base64 multi-term mermaid-docker-mode markdown-mode htmlize helpful gradle-mode go-mode gnu-elpa-keyring-update ess elfeed-tube-mpv elfeed-org dockerfile-mode dired-duplicates diminish define-it decor cython-mode company-quickhelp brainfuck-mode auto-complete ascii-art-to-unicode))
+   '(company elfeed-tube elfeed mermaid-mode org-roam langdoc ace-window ascii-art-to-unicode auto-complete brainfuck-mode cmake-mode company-quickhelp curl-to-elisp cython-mode dbml-mode decor dedicated define-it digit-groups diminish dired-duplicates docker-compose-mode dockerfile-mode ecukes elfeed-org elfeed-tube-mpv ess exec-path-from-shell gnu-elpa-keyring-update go-mode gradle-mode graphviz-dot-mode groovy-mode helpful htmlize httprepl keepass-mode kivy-mode kotlin-mode markdown-mode mermaid-docker-mode multi-term ob-base64 org-epa-gpg org-roam-timestamps org-roam-ui org-transclusion org-web-tools osm package-lint php-mode ssh-config-mode terraform-mode typewriter-roll-mode undercover use-package v-mode wc-mode which-key yaml-mode))
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(show-paren-mode t nil (paren))
