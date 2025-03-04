@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.1
+;; Version: 5.2
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -197,6 +197,7 @@
 (defun custom-exit ()
   "Run at exit."
   (interactive "P")
+  (require 'org-roam-db)
   (progn
     (progn
       (message "Deleting MPV playlist")
@@ -281,8 +282,6 @@
           (when keepass-mode-db (cred "imgur-api" const-username)))
     (setq my-imgur-client-secret
           (when keepass-mode-db (cred "imgur-api" const-password)))
-    (setq syncthing-default-server-token
-          (when keepass-mode-db (cred "syncthing-token" const-password)))
     ;; Only unless found set to default, otherwise nil
     (setq elfeed-db-directory
           (when keepass-mode-db
@@ -1029,7 +1028,7 @@
 
 (defun my-org-roam-stop-and-clear ()
   "Stop Org Roam and clear everything unnecessary."
-  ;; Stop the mode
+  (require 'org-roam-db)
   (org-roam-db-autosync-mode -1)
 
   ;; clear the DB and Emacs cached entries
