@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.0
+;; Version: 5.1
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -21,6 +21,24 @@
 ;;; Code:
 
 ;; This file is not part of GNU Emacs
+
+(let ((path (expand-file-name "early-init.el" user-emacs-directory)))
+  (unless (file-exists-p path)
+    (with-temp-file path
+      (insert ";; Example Elpaca early-init.el -*- lexical-binding: t; -*-
+
+(setq package-enable-at-startup nil)
+
+;; Local Variables:
+;; no-byte-compile: t
+;; no-native-compile: t
+;; no-update-autoloads: t
+;; End:
+"))
+    (unless (boundp 'org-roam-db-location)
+      (setq org-roam-db-location "/tmp/ignore-me"))
+    (restart-emacs)
+    (error "https://www.youtube.com/watch?v=OCsMKypvmB0")))
 
 ;; Elpaca Installer
 (defvar elpaca-installer-version 0.10)
@@ -210,6 +228,9 @@
 
 (progn
 ;; keepass
+(defun my-cache-gpg-key-cancel ()
+  (interactive)
+  (cancel-function-timers 'my-cache-gpg-key))
 (defun my-cache-gpg-key (&optional keep ctx)
   (interactive)
   (eval-when-compile (require 'epg))
@@ -496,7 +517,7 @@
 (use-package wc-mode :ensure (:depth 1))
 
 (use-package org
-  :ensure (:depth 1)
+  :ensure (:depth 1 :wait t)
   :config
   (progn
     (setq org-agenda-files nil)
@@ -1168,6 +1189,12 @@
                    (lambda () (keymap-set term-raw-map "M-o" #'ace-window)))))
 
 (use-package httprepl
+  :ensure (:depth 1))
+
+(use-package go-mode
+  :ensure (:depth 1))
+
+(use-package yaml-mode
   :ensure (:depth 1))
 
 ;; Stop the `list-processes' SIGKILL insanity
