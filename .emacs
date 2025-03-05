@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.2
+;; Version: 5.3
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -1194,6 +1194,9 @@
   :ensure (:depth 1))
 
 (use-package yaml-mode
+  :ensure (:depth 1))
+
+(use-package markdown-mode
   :ensure (:depth 1))
 
 ;; Stop the `list-processes' SIGKILL insanity
