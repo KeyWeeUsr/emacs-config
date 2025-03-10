@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.3
+;; Version: 5.4
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -633,7 +633,8 @@
   :ensure (:depth 1)
   :after mermaid-mode
   :config (progn (setq mermaid-docker-external-viewer-bin "/usr/bin/xviewer")
-                 (setq mermaid-docker-focus-steal-ms 100)))
+                 (setq mermaid-docker-focus-steal-ms 100)
+                 (setq mermaid-docker-stay-in-window t)))
 
 (use-package typewriter-roll-mode
   :ensure (:depth 1))
