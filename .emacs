@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.4
+;; Version: 5.5
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -336,6 +336,13 @@
           (unless (string= new "")
             (setf (symbol-value var) new)))))))
 ) ;; keepass end
+
+(use-package auth-source
+  :ensure nil
+  :config
+  (unless (string= window-system "android")
+    (setq auth-sources '("~/.authinfo.gpg"))
+    (setq auth-source-gpg-encrypt-to (list my-epa-file-encrypt-to))))
 
 (use-package syncthing
   :ensure (:depth 1)
@@ -1198,6 +1205,18 @@
   :ensure (:depth 1))
 
 (use-package markdown-mode
+  :ensure (:depth 1))
+
+(use-package lark-mode
+  :ensure (:depth 1))
+
+(use-package rust-mode
+  :ensure (:depth 1))
+
+(use-package feature-mode
+  :ensure (:depth 1))
+
+(use-package verb
   :ensure (:depth 1))
 
 ;; Stop the `list-processes' SIGKILL insanity
