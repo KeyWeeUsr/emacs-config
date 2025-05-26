@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.5
+;; Version: 5.6
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -338,6 +338,7 @@
 ) ;; keepass end
 
 (use-package auth-source
+  :after keepass-mode
   :ensure nil
   :config
   (unless (string= window-system "android")
@@ -1214,9 +1215,21 @@
   :ensure (:depth 1))
 
 (use-package feature-mode
-  :ensure (:depth 1))
+  :ensure (:depth 1)
+  :init
+  ;; broken upstream recipe, copy the .json
+  (let* ((langs-name "gherkin-languages.json")
+         (recipe (elpaca-recipe 'feature-mode))
+         (build-dir (elpaca-build-dir recipe))
+         (langs (file-name-concat build-dir langs-name)))
+    (unless (file-exists-p langs)
+      (copy-file (file-name-concat (elpaca-repo-dir recipe) langs-name)
+                 langs))))
 
 (use-package verb
+  :ensure (:depth 1))
+
+(use-package package-lint
   :ensure (:depth 1))
 
 ;; Stop the `list-processes' SIGKILL insanity
