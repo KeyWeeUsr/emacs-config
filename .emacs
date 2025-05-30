@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.6
+;; Version: 5.7
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -41,6 +41,7 @@
     (error "https://www.youtube.com/watch?v=OCsMKypvmB0")))
 
 ;; Elpaca Installer
+(defvar elpaca-lock-file (format "%s.elpaca.lock" user-init-file))
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -90,6 +91,9 @@
 ;; Enable use-package :ensure support for Elpaca.
 (elpaca elpaca-use-package
   (elpaca-use-package-mode))
+
+;; constants, etc
+(defvar my-epa-file-encrypt-to "")
 
 ;; Allow emacsclient -n file.ext opening
 (server-start)
@@ -523,8 +527,12 @@
 
 (use-package wc-mode :ensure (:depth 1))
 
+(use-package graphviz-dot-mode
+  :ensure (:depth 1))
+
 (use-package org
   :ensure (:depth 1 :wait t)
+  :after (graphviz-dot-mode verb)
   :config
   (progn
     (setq org-agenda-files nil)
@@ -535,6 +543,7 @@
             (python . t)
             (latex . t)
             (R . t)
+            (verb . t)
             (dot . t)))
     (org-babel-do-load-languages
      'org-babel-load-languages
@@ -1230,6 +1239,9 @@
   :ensure (:depth 1))
 
 (use-package package-lint
+  :ensure (:depth 1))
+
+(use-package ecukes
   :ensure (:depth 1))
 
 ;; Stop the `list-processes' SIGKILL insanity
