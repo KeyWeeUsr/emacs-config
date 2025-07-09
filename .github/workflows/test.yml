@@ -21,13 +21,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Cache apt packages
+      - name: Restore apt packages
         id: cache-apt
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
-            /var/cache/apt
-            /var/lib/apt/lists
+            apt-cache
+            apt-lists
           key: >-
             os-${{ matrix.os }}
             apt-${{ hashFiles('.github/apt.txt') }}
@@ -41,7 +41,9 @@ jobs:
           sudo_prefix=""
           test -z "$ACT" && sudo_prefix=sudo
           rm /etc/apt/apt.conf.d/docker* || true
+          time $sudo_prefix mv apt-lists /var/lib/apt/lists || echo No cache
           time $sudo_prefix apt update
+          cp -r /var/lib/apt/lists apt-lists
 
       - name: apt install
         run: |-
@@ -51,9 +53,26 @@ jobs:
               && flags="--no-download"
           test -z "$ACT" && sudo_prefix=sudo
           echo "flags: $flags"
+
+          time $sudo_prefix mv apt-cache /var/cache/apt || echo No cache
           time $sudo_prefix apt-get \
               -o APT::Keep-Downloaded-Packages=true \
               install \
               $flags \
               --no-install-recommends \
               --no-install-suggests -y $(grep -v '#' .github/apt.txt)
+          cp -r /var/cache/apt apt-cache
+
+
+      - name: Cache apt packages
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            apt-cache
+            apt-lists
+          key: >-
+            os-${{ matrix.os }}
+            apt-${{ hashFiles('.github/apt.txt') }}
+          restore-keys: >-
+            os-${{ matrix.os }}
+            apt-
