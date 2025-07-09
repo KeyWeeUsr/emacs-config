@@ -38,7 +38,7 @@ jobs:
       - name: apt update
         if: steps.cache-apt.outputs.cache-hit != 'true'
         run: |-
-          rm /etc/apt/apt.conf.d/docker*
+          rm /etc/apt/apt.conf.d/docker* || true
           time apt update
 
       - name: apt install
