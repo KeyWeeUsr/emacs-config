@@ -38,16 +38,22 @@ jobs:
       - name: apt update
         if: steps.cache-apt.outputs.cache-hit != 'true'
         run: |-
+          sudo_prefix=""
+          test -z "$ACT" && sudo_prefix=sudo
           rm /etc/apt/apt.conf.d/docker* || true
-          time apt update
+          time $sudo_prefix apt update
 
       - name: apt install
         run: |-
           flags=""
+          sudo_prefix=""
           test "${{ steps.cache-apt.outputs.cache-hit }}" = 'true' \
               && flags="--no-download"
+          test -z "$ACT" && sudo_prefix=sudo
           echo "flags: $flags"
-          time apt-get -o APT::Keep-Downloaded-Packages=true install \
+          time $sudo_prefix apt-get \
+              -o APT::Keep-Downloaded-Packages=true \
+              install \
               $flags \
               --no-install-recommends \
               --no-install-suggests -y $(grep -v '#' .github/apt.txt)
