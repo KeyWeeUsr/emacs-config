@@ -1,0 +1,10 @@
+# https
+ca-certificates
+
+# nix emacs
+sudo
+curl
+xz-utils
+
+# elpaca
+git

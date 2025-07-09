@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    paths-ignore: ['**.md']
+  pull_request:
+    paths-ignore: ['**.md']
+
+jobs:
+  compile:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache apt packages
+        id: cache-apt
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt
+            /var/lib/apt/lists
+          key: >-
+            os-${{ matrix.os }}
+            apt-${{ hashFiles('.github/apt.txt') }}
+          restore-keys: >-
+            os-${{ matrix.os }}
+            apt-
+
+      - name: apt update
+        if: steps.cache-apt.outputs.cache-hit != 'true'
+        run: |-
+          rm /etc/apt/apt.conf.d/docker*
+          time apt update
+
+      - name: apt install
+        run: |-
+          flags=""
+          test "${{ steps.cache-apt.outputs.cache-hit }}" = 'true' \
+              && flags="--no-download"
+          echo "flags: $flags"
+          time apt-get -o APT::Keep-Downloaded-Packages=true install \
+              $flags \
+              --no-install-recommends \
+              --no-install-suggests -y $(grep -v '#' .github/apt.txt)
