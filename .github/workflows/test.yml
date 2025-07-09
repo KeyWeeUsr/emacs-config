@@ -41,9 +41,10 @@ jobs:
           sudo_prefix=""
           test -z "$ACT" && sudo_prefix=sudo
           rm /etc/apt/apt.conf.d/docker* || true
-          time $sudo_prefix mv apt-lists /var/lib/apt/lists || echo No cache
+          $sudo_prefix mv apt-lists /var/lib/apt/lists || echo No cache
           time $sudo_prefix apt update
-          cp -r /var/lib/apt/lists apt-lists
+          $sudo_prefix cp -r /var/lib/apt/lists apt-lists
+          $sudo_prefix chown -R $UID:$UID apt-lists
 
       - name: apt install
         run: |-
@@ -61,8 +62,8 @@ jobs:
               $flags \
               --no-install-recommends \
               --no-install-suggests -y $(grep -v '#' .github/apt.txt)
-          cp -r /var/cache/apt apt-cache
-
+          $sudo_prefix cp -r /var/cache/apt apt-cache
+          $sudo_prefix chown -R $UID:$UID apt-cache
 
       - name: Cache apt packages
         uses: actions/cache/save@v4
