@@ -540,6 +540,7 @@
 (use-package ascii-art-to-unicode :ensure (:depth 1))
 (use-package bind-key :ensure nil)
 (use-package brainfuck-mode :ensure (:depth 1))
+(use-package bfbuilder :ensure (:depth 1))
 (use-package diminish :ensure (:depth 1))
 (use-package popup :ensure (:depth 1))
 (use-package php-mode :ensure (:depth 1))
