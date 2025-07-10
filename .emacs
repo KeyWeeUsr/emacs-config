@@ -24,6 +24,9 @@
 
 ;; todo(compile): with-suppressed-warnings vs with-no-warnings
 
+(unless (executable-find "git")
+  (error "Install or ensure binary is on path: 'git'"))
+
 (let ((path (expand-file-name "early-init.el" user-emacs-directory)))
   (unless (file-exists-p path)
     (with-temp-file path
@@ -41,6 +44,7 @@
       (with-no-warnings
         ;; note(free-var,defvar-shadow): org-roam-db before needed
         (setq org-roam-db-location "/tmp/ignore-me")))
+    (message "Restarting Emacs")
     (restart-emacs)
     (error "https://www.youtube.com/watch?v=OCsMKypvmB0")))
 
