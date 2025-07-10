@@ -136,7 +136,8 @@
  '(show-paren-mode t nil (paren))
  '(tab-stop-list (number-sequence 4 200 4))
  '(tab-width 4)
- '(tool-bar-mode nil)
+ ;; todo: void-function tool-bar-mode
+ ;; '(tool-bar-mode nil)
  '(use-file-dialog nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -194,6 +195,7 @@
     "Fix Emacs breaking on MacOS."
     (interactive)
     (eval-when-compile (require 'tool-bar))
+    (require 'tool-bar)
     (when (eq window-system 'ns)
       (tool-bar-mode -1)
       (setq frame-resize-pixelwise t)
