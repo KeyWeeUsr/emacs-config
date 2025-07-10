@@ -83,17 +83,29 @@ jobs:
           $sudo_prefix cp -r /var/cache/apt apt-cache
           $sudo_prefix chown -R $UID:$UID apt-cache
 
-      - name: Cache Emacs installation
+      - name: Restore Emacs
         id: cache-emacs
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
-            /nix
-            /etc/nix/nix.conf
-            /root/.nix-profile/bin
+            nix
+            etc-nix
+            nix-profile
           key: >-
             os-${{ matrix.os }}
             emacs-${{ matrix.emacs }}
+
+      - name: Restore Emacs to original location
+        run: |-
+          sudo_prefix=""
+          test -z "$ACT" && sudo_prefix=sudo
+          $sudo_prefix rm -rf \
+              /nix \
+              /etc/nix \
+              /root/.nix-profile || true
+          $sudo_prefix mv nix /nix || echo No cache
+          $sudo_prefix mv etc-nix /etc/nix || echo No cache
+          $sudo_prefix mv nix-profile /root/.nix-profile || echo No cache
 
       - name: Set up Emacs
         if: steps.cache-emacs.outputs.cache-hit != 'true'
@@ -101,10 +113,18 @@ jobs:
         with:
           version: ${{ matrix.emacs }}
 
-      - name: Update PATH
+      - name: Update PATH for Emacs and prepare for caching
         run: |
+          sudo_prefix=""
+          test -z "$ACT" && sudo_prefix=sudo
+
           echo "/root/.local/bin" >> "$GITHUB_PATH"
           echo "/root/.nix-profile/bin" >> "$GITHUB_PATH"
+
+          $sudo_prefix cp -r /nix nix
+          $sudo_prefix cp -r /etc/nix etc-nix
+          $sudo_prefix cp -r /root/.nix-profile nix-profile
+          $sudo_prefix chown -R $UID:$UID nix etc-nix nix-profile
 
       - name: Cache apt packages
         uses: actions/cache/save@v4
@@ -118,3 +138,14 @@ jobs:
           restore-keys: >-
             os-${{ matrix.os }}
             apt-
+
+      - name: Cache Emacs
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            nix
+            etc-nix
+            nix-profile
+          key: >-
+            os-${{ matrix.os }}
+            emacs-${{ matrix.emacs }}
