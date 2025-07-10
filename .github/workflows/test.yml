@@ -38,7 +38,7 @@ jobs:
         with:
           path: |
             apt-cache
-            apt-lists
+            apt-lib
           key: >-
             os-${{ matrix.os }}
             apt-${{ hashFiles('.github/apt.txt') }}
@@ -50,8 +50,9 @@ jobs:
         run: |-
           sudo_prefix=""
           test -z "$ACT" && sudo_prefix=sudo
-          $sudo_prefix rm -rf /var/lib/apt/lists || true
-          $sudo_prefix mv apt-lists /var/lib/apt/lists || echo No cache
+          # todo: not so broad copy
+          $sudo_prefix rm -rf /var/lib/apt || true
+          $sudo_prefix mv apt-lib /var/lib/apt || echo No cache
 
       - name: apt update
         if: steps.cache-apt.outputs.cache-hit != 'true'
@@ -60,8 +61,8 @@ jobs:
           test -z "$ACT" && sudo_prefix=sudo
           rm /etc/apt/apt.conf.d/docker* || true
           time $sudo_prefix apt update
-          $sudo_prefix cp -r /var/lib/apt/lists apt-lists
-          $sudo_prefix chown -R $UID:$UID apt-lists
+          $sudo_prefix cp -r /var/lib/apt apt-lib
+          $sudo_prefix chown -R $UID:$UID apt-lib
 
       - name: apt install
         run: |-
@@ -131,7 +132,7 @@ jobs:
         with:
           path: |
             apt-cache
-            apt-lists
+            apt-lib
           key: >-
             os-${{ matrix.os }}
             apt-${{ hashFiles('.github/apt.txt') }}
