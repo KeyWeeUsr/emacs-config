@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Restore apt packages
+      - name: Restore apt lists and cache
         id: cache-apt
         uses: actions/cache/restore@v4
         with:
@@ -35,13 +35,19 @@ jobs:
             os-${{ matrix.os }}
             apt-
 
+      - name: Restore apt lists to original location
+        run: |-
+          sudo_prefix=""
+          test -z "$ACT" && sudo_prefix=sudo
+          $sudo_prefix rm -rf /var/lib/apt/lists || true
+          $sudo_prefix mv apt-lists /var/lib/apt/lists || echo No cache
+
       - name: apt update
         if: steps.cache-apt.outputs.cache-hit != 'true'
         run: |-
           sudo_prefix=""
           test -z "$ACT" && sudo_prefix=sudo
           rm /etc/apt/apt.conf.d/docker* || true
-          $sudo_prefix mv apt-lists /var/lib/apt/lists || echo No cache
           time $sudo_prefix apt update
           $sudo_prefix cp -r /var/lib/apt/lists apt-lists
           $sudo_prefix chown -R $UID:$UID apt-lists
@@ -53,8 +59,9 @@ jobs:
           test "${{ steps.cache-apt.outputs.cache-hit }}" = 'true' \
               && flags="--no-download"
           test -z "$ACT" && sudo_prefix=sudo
-          echo "flags: $flags"
+          rm /etc/apt/apt.conf.d/docker* || true
 
+          time $sudo_prefix rm -rf /var/cache/apt || true
           time $sudo_prefix mv apt-cache /var/cache/apt || echo No cache
           time $sudo_prefix apt-get \
               -o APT::Keep-Downloaded-Packages=true \
