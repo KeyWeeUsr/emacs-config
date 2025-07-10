@@ -919,11 +919,6 @@
   :ensure (:depth 1))
 
 
-;; Separate plugins folder
-(let ((plugins-dir (expand-file-name "plugins" user-emacs-directory)))
-  (unless (file-exists-p plugins-dir) (make-directory plugins-dir))
-  (add-to-list 'load-path plugins-dir))
-
 ;; Kivy .kv syntax plugin
 (use-package kivy-mode
   :ensure (:depth 1))
