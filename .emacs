@@ -792,7 +792,83 @@
                             (t (setq option
                                      (alist-get (intern `,option) tpl-map))
                                (cadr option)))))))
-          (org-roam-node-find nil initial-input)))))
+          (org-roam-node-find nil initial-input))))
+    (defun org-roam-ext-find-by-tag (tag)
+      (interactive "sTag: ")
+      (let (opt-chars query selected options)
+        (setq opt-chars
+              ;; (number-sequence 1 5) -> [1] .. [5]
+              ;; (string 48) .. (string 57)
+              ;; (string 65) .. (string 90)
+              ;; (string 97) .. (string 122)
+              (mapcar (lambda (num) (string num))
+                      ;; note: 0-9 + A-Z + a-z
+                      (append (number-sequence 48 57)
+                              (number-sequence 65 90)
+                              (number-sequence 97 122))))
+        (setq query (format
+                     "SELECT %s FROM %s %s WHERE tag like '%%%%%s%%%%'"
+                     (string-join '("title" "file" "pos" "properties") ",")
+                     "tags" "LEFT JOIN nodes n ON (n.id = node_id)" tag))
+        (setq selected (org-roam-db-query query))
+
+        (unless selected
+          (error "No results from org-roam DB.  Are notes loaded?"))
+
+        (dolist (item selected)
+          (let (new)
+            (setf (alist-get 'char new) (pop opt-chars)) ; unhandled out of chars
+            (setf (alist-get 'title new) (car item))
+            (setf (alist-get 'file new) (car (cdr item)))
+            (setf (alist-get 'pos new) (car (cdr (cdr item))))
+            (setf (alist-get 'tags new)
+                  (let ((all (car (cdr (cdr (cdr item))))) result)
+                    (dolist (single all)
+                      (when (string= "ALLTAGS" (car single))
+                        (setq result
+                              (remove "" (split-string (cdr single) ":")))))
+                    result))
+            (push new options)))
+        (let (msg tmp)
+          (dolist (opt (reverse options))
+            (setq tmp (format "(%s) %s (%s)"
+                              (alist-get 'char opt)
+                              (alist-get 'title opt)
+                              (string-join (alist-get 'tags opt) ", ")))
+            (setq msg (if msg (format "%s\n%s" msg tmp) tmp)))
+          (message msg))
+        (let ((key (read-key)) result file-path)
+          (dolist (opt options)
+            (when (string= (string key) (alist-get 'char opt))
+              (setq result opt)))
+          (setq file-path (alist-get 'file result))
+          (when file-path
+            (find-file file-path)
+            (goto-char (alist-get 'pos result))))))
+    (defun my-org-roam-stop-and-clear ()
+      "Stop Org Roam and clear everything unnecessary."
+      (require 'org-roam-db)
+      (org-roam-db-autosync-mode -1)
+
+      ;; clear the DB and Emacs cached entries
+      (org-roam-db-clear-all)
+      (when (boundp 'org-roam-db-location)
+        (delete-file org-roam-db-location)
+        (if (file-exists-p org-roam-db-location)
+            (message "Failed to delete org-roam DB, delete manually!")
+          (message "Successfully deleted org-roam DB"))
+        (sleep-for 0.1)))
+    (defun my-notes()
+      "Start org-roam DB sync / load zettelkasten."
+      (interactive)
+      (my-org-roam-stop-and-clear)
+      (my-set-org-roam-directory)
+      (my-org-roam-start))
+    (defun my-org-roam-start ()
+      (when (boundp 'org-roam-directory)
+        (unless (file-exists-p org-roam-directory)
+          (make-directory org-roam-directory)))
+      (org-roam-db-autosync-mode)))
   :bind (("C-c n f" . my-org-roam-node-find)
          ("C-c n r" . org-roam-node-random)
          ("C-c n z" . org-roam-ext-find-by-tag)
@@ -803,86 +879,6 @@
                 ("C-c n t" . org-roam-tag-add)
                 ("C-c n a" . org-roam-alias-add)
                 ("C-c n l" . org-roam-buffer-toggle)))))
-(use-package org-roam-db
-  :after org-roam
-  :ensure (:depth 1)
-  :init
-  (defun org-roam-ext-find-by-tag (tag)
-    (interactive "sTag: ")
-    (let (opt-chars query selected options)
-      (setq opt-chars
-            ;; (number-sequence 1 5) -> [1] .. [5]
-            ;; (string 48) .. (string 57)
-            ;; (string 65) .. (string 90)
-            ;; (string 97) .. (string 122)
-            (mapcar (lambda (num) (string num))
-                    ;; note: 0-9 + A-Z + a-z
-                    (append (number-sequence 48 57)
-                            (number-sequence 65 90)
-                            (number-sequence 97 122))))
-      (setq query (format
-                   "SELECT %s FROM %s %s WHERE tag like '%%%%%s%%%%'"
-                   (string-join '("title" "file" "pos" "properties") ",")
-                   "tags" "LEFT JOIN nodes n ON (n.id = node_id)" tag))
-      (setq selected (org-roam-db-query query))
-
-      (unless selected
-        (error "No results from org-roam DB.  Are notes loaded?"))
-
-      (dolist (item selected)
-        (let (new)
-          (setf (alist-get 'char new) (pop opt-chars)) ; unhandled out of chars
-          (setf (alist-get 'title new) (car item))
-          (setf (alist-get 'file new) (car (cdr item)))
-          (setf (alist-get 'pos new) (car (cdr (cdr item))))
-          (setf (alist-get 'tags new)
-                (let ((all (car (cdr (cdr (cdr item))))) result)
-                  (dolist (single all)
-                    (when (string= "ALLTAGS" (car single))
-                      (setq result
-                            (remove "" (split-string (cdr single) ":")))))
-                  result))
-          (push new options)))
-      (let (msg tmp)
-        (dolist (opt (reverse options))
-          (setq tmp (format "(%s) %s (%s)"
-                            (alist-get 'char opt)
-                            (alist-get 'title opt)
-                            (string-join (alist-get 'tags opt) ", ")))
-          (setq msg (if msg (format "%s\n%s" msg tmp) tmp)))
-        (message msg))
-      (let ((key (read-key)) result file-path)
-        (dolist (opt options)
-          (when (string= (string key) (alist-get 'char opt))
-            (setq result opt)))
-        (setq file-path (alist-get 'file result))
-        (when file-path
-          (find-file file-path)
-          (goto-char (alist-get 'pos result))))))
-  (defun my-org-roam-stop-and-clear ()
-    "Stop Org Roam and clear everything unnecessary."
-    (require 'org-roam-db)
-    (org-roam-db-autosync-mode -1)
-
-    ;; clear the DB and Emacs cached entries
-    (org-roam-db-clear-all)
-    (when (boundp 'org-roam-db-location)
-      (delete-file org-roam-db-location)
-      (if (file-exists-p org-roam-db-location)
-          (message "Failed to delete org-roam DB, delete manually!")
-        (message "Successfully deleted org-roam DB"))
-      (sleep-for 0.1)))
-  (defun my-notes()
-    "Start org-roam DB sync / load zettelkasten."
-    (interactive)
-    (my-org-roam-stop-and-clear)
-    (my-set-org-roam-directory)
-    (my-org-roam-start))
-  (defun my-org-roam-start ()
-    (when (boundp 'org-roam-directory)
-      (unless (file-exists-p org-roam-directory)
-        (make-directory org-roam-directory)))
-    (org-roam-db-autosync-mode)))
 )
 ;; note(org-roam,end): zettelkasten
 
