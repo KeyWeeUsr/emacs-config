@@ -1030,7 +1030,7 @@
   :ensure nil)
 (use-package elfeed-tube
   :ensure (:depth 1)
-  :after (json elfeed-org)
+  :after (json elfeed-org elfeed-tube-mpv)
   :demand t
   :config
   ;; (setq elfeed-tube-auto-save-p nil) ; default value
@@ -1059,7 +1059,6 @@
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)))
 ;; note(elfeed,youtube,end): YouTube channels in Elfeed
-
 ;; note(elfeed,youtube,mpv,begin): Local playing
 (use-package elfeed-tube-mpv
   :ensure (:depth 1)
@@ -1068,6 +1067,9 @@
          ("C-c C-m" . elfeed-tube-mpv)
          ("C-c C-f" . elfeed-tube-mpv-follow-mode)
          ("C-c C-w" . elfeed-tube-mpv-where)))
+;; nitpick(elfeed-tube): bad recipe, deps fail to download
+(use-package mpv
+  :ensure (:depth 1))
 ;; note(elfeed,youtube,mpv,end): Local playing
 
 (use-package terraform-mode
