@@ -45,3 +45,89 @@ jobs:
               --directory . \
               --load <(echo "(setq byte-compile-error-on-warn t)") \
               --eval '(unless (byte-compile-file ".emacs") (kill-emacs 1))'
+
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+        emacs: [
+          # '27.1', '27.2',
+          # '28.1',
+          # '28.2',
+          # '29.1', '29.2',
+          '29.3',
+          # 'snapshot'
+        ]
+        ecukes:
+          - 0.6.18
+
+    container:
+      image: silex/emacs:${{ matrix.emacs }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # todo(offline): cache or pre-build
+      - name: Ensure clean byte-compilation
+        run: |
+          apt update
+          apt install -y nodejs
+
+      - name: Cache Ecukes
+        id: cache-ecukes
+        uses: actions/cache@v4
+        with:
+          path: |
+            /root/.emacs.d/elpa/ecukes-0.6.18
+            /root/.emacs.d/elpa/f-0.21.0
+            /root/.emacs.d/elpa/s-1.13.0
+            /root/.emacs.d/elpa/dash-2.20.0
+            /root/.emacs.d/elpa/ansi-0.4.1
+            /root/.emacs.d/elpa/espuds-0.3.3
+            /root/.emacs.d/elpa/commander-0.7.0
+          key: >-
+            os-${{ matrix.os }}
+            emacs-${{ matrix.emacs }}
+            ecukes-${{ matrix.ecukes }}
+
+      - name: Install Ecukes
+        if: steps.cache-ecukes.outputs.cache-hit != 'true'
+        run: |-
+          set -e
+          time emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn
+                (require 'package)
+                (add-to-list
+                 'package-archives
+                 '("stable-melpa" . "https://stable.melpa.org/packages/") t)
+                (package-initialize)
+                (package-refresh-contents)
+                (package-list-packages)
+                (package-install 'ecukes)
+              )
+          EOF
+          )"
+
+      - name: Ensure Ecukes
+        run: |-
+          time emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn
+                (package-initialize)
+                (require 'ecukes)
+                (ecukes-load))
+          EOF
+          )"
+          ls -lah /root/.emacs.d/elpa*
