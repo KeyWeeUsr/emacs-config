@@ -598,6 +598,7 @@
 (use-package multi-term
   :ensure (:depth 1)
   :after term
+  :bind ("C-c |" . #'multi-term-leftside)
   :config
   (progn
     (setq term-bind-key-alist
@@ -947,16 +948,16 @@
 
 (use-package elfeed
   :ensure (:depth 1)
-  :config
+  :init
   (setq elfeed-search-filter "@2023-02-07T23:59 +unread ")
   :bind (:map elfeed-search-mode-map
-              ("R" . elfeed-search-untag-all-unread---reversed)
-              ("A" . elfeed-search--append-to-mpv-playlist---reversed)
-              ("a" . elfeed-search--append-to-mpv-playlist)
-              ("o" . elfeed-search--open-link))
-  :bind (:map elfeed-show-mode-map
-              ("C-c C-o" . elfeed-show-visit))
-  :init
+         ("R" . elfeed-search-untag-all-unread---reversed)
+         ("A" . elfeed-search--append-to-mpv-playlist---reversed)
+         ("a" . elfeed-search--append-to-mpv-playlist)
+         ("o" . elfeed-search--open-link)
+         :map elfeed-show-mode-map
+         ("C-c C-o" . elfeed-show-visit))
+  :config
   (progn
     (defun elfeed-search-untag-all-unread---reversed ()
       "Reverse \\='r' behavior in elfeed."
@@ -1061,12 +1062,12 @@
 ;; note(elfeed,youtube,end): YouTube channels in Elfeed
 ;; note(elfeed,youtube,mpv,begin): Local playing
 (use-package elfeed-tube-mpv
-  :ensure (:depth 1)
-  :after elfeed-tube
-  :bind (:map elfeed-show-mode-map
-         ("C-c C-m" . elfeed-tube-mpv)
-         ("C-c C-f" . elfeed-tube-mpv-follow-mode)
-         ("C-c C-w" . elfeed-tube-mpv-where)))
+  :ensure nil
+  :after (elfeed-tube elfeed mpv)
+  :bind (:map 'elfeed-show-mode-map
+         ("C-c C-m" . #'elfeed-tube-mpv)
+         ("C-c C-f" . #'elfeed-tube-mpv-follow-mode)
+         ("C-c C-w" . #'elfeed-tube-mpv-where)))
 ;; nitpick(elfeed-tube): bad recipe, deps fail to download
 (use-package mpv
   :ensure (:depth 1))
@@ -1078,21 +1079,20 @@
 ;; note(helpful,begin): Better help pages
 (use-package helpful
   :ensure (:depth 1)
-  :config
-  (progn
-    (global-set-key (kbd "C-h f") #'helpful-callable)
-    (global-set-key (kbd "C-h v") #'helpful-variable)
-    (global-set-key (kbd "C-h k") #'helpful-key)
-    (global-set-key (kbd "C-h x") #'helpful-command)))
+  :bind (("C-h f" . #'helpful-callable)
+         ("C-h v" . #'helpful-variable)
+         ("C-h k" . #'helpful-key)
+         ("C-h x" . #'helpful-command)))
 ;; note(helpful,end): Better help pages
 
 ;; note(window,begin): Bindings for quicker window size and buffer manipulation
-(global-set-key (kbd "C-c <up>") 'shrink-window)
-(global-set-key (kbd "C-c <down>") 'enlarge-window)
-(global-set-key (kbd "C-c <left>") 'shrink-window-horizontally)
-(global-set-key (kbd "C-c <right>") 'enlarge-window-horizontally)
-(global-set-key (kbd "C-c |") 'multi-term-leftside)
-(global-set-key (kbd "<f12>") 'kill-buffer-and-window)
+(use-package window
+  :ensure nil
+  :bind (("C-c <up>" . #'shrink-window)
+         ("C-c <down>" . #'enlarge-window)
+         ("C-c <left>" . #'shrink-window-horizontally)
+         ("C-c <right>" . #'enlarge-window-horizontally)
+         ("<f12>" . #'kill-buffer-and-window)))
 ;; note(window,end): Bindings for quicker window size and buffer manipulation
 
 ;; note(unindent,begin): https://stackoverflow.com/a/2250155/5994041
@@ -1312,9 +1312,9 @@
 
 (use-package ace-window
   :ensure (:depth 1)
+  :bind (("M-o" . #'ace-window))
   :config
-  (progn (global-set-key (kbd "M-o") #'ace-window)
-         (add-hook 'term-mode-hook
+  (progn (add-hook 'term-mode-hook
                    (lambda () (keymap-set term-raw-map "M-o" #'ace-window)))))
 
 (use-package httprepl
