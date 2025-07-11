@@ -133,3 +133,56 @@ jobs:
           EOF
           )"
           ls -lah /root/.emacs.d/elpa*
+
+      # note: the initial boot relies on too many moving parts
+      #       therefore, many retries for failed packages and cache
+      #       and test the behavior afterwards (encourages me to lock too)
+      - name: Cache Elpaca bootstrap
+        id: cache-elpaca
+        uses: actions/cache@v4
+        with:
+          path: |
+            /root/.emacs.d
+          key: >-
+            os-${{ matrix.os }}
+            emacs-${{ matrix.emacs }}
+            elpaca-${{ hashFiles('.emacs.elpaca.lock') }}
+          # nitpick: might or might not be a good idea here; let's see
+          restore-keys: >-
+            os-${{ matrix.os }}
+            emacs-${{ matrix.emacs }}
+            elpaca-
+
+      - name: Run installation behavior test
+        if: steps.cache-elpaca.outputs.cache-hit != 'true'
+        run: |-
+          emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn
+                (require 'package)
+                (package-initialize)
+                (require 'f)
+                (require 'ecukes)
+                (add-hook 'ecukes-reporter-steps-without-definition-hook
+                          (lambda (steps)
+                            (ignore steps)
+                            (error "Missing implementations: %S" steps)))
+
+                (add-hook 'ecukes-reporter-scenario-failed-hook
+                          (lambda (scenario)
+                            (message "scenario failed: %S" scenario)))
+                (ecukes-load)
+                (ecukes-reporter-use ecukes-cli-reporter)
+
+                (message "Running install.feature")
+                (ecukes-run (f-glob "install.feature"
+                                    (ecukes-project-features-path)))
+                (when (> (+ ecukes-stats-steps-failed
+                            ecukes-stats-scenarios-failed)
+                         0)
+                  (error "Install test failed"))
+              )
+          EOF
+          )" || (ls -lah /root/.emacs.d/elpaca/repos*;exit 1)
+          ls -lah /root/.emacs.d/elpaca/repos
