@@ -80,7 +80,9 @@ jobs:
       - name: Ensure clean byte-compilation
         run: |
           apt update
-          apt install -y nodejs
+          apt install -y nodejs git \
+              --no-install-recommends \
+              --no-install-suggests
 
       - name: Cache Ecukes
         id: cache-ecukes
