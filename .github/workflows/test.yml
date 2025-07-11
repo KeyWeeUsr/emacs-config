@@ -1,6 +1,6 @@
 # act -j compile --use-new-action-cache --action-offline-mode
 
-# todo(artifacts): /root/.emacs.d/elpa,elpaca; chown -R 1000:1000, tgz, sign
+# todo(artifacts): ~/.emacs.d/elpa,elpaca; chown -R 1000:1000, tgz, sign
 name: CI
 
 on:
@@ -89,13 +89,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /root/.emacs.d/elpa/ecukes-0.6.18
-            /root/.emacs.d/elpa/f-0.21.0
-            /root/.emacs.d/elpa/s-1.13.0
-            /root/.emacs.d/elpa/dash-2.20.0
-            /root/.emacs.d/elpa/ansi-0.4.1
-            /root/.emacs.d/elpa/espuds-0.3.3
-            /root/.emacs.d/elpa/commander-0.7.0
+            ~/.emacs.d/elpa/ecukes-0.6.18
+            ~/.emacs.d/elpa/f-0.21.0
+            ~/.emacs.d/elpa/s-1.13.0
+            ~/.emacs.d/elpa/dash-2.20.0
+            ~/.emacs.d/elpa/ansi-0.4.1
+            ~/.emacs.d/elpa/espuds-0.3.3
+            ~/.emacs.d/elpa/commander-0.7.0
           key: >-
             os-${{ matrix.os }}
             emacs-${{ matrix.emacs }}
@@ -132,7 +132,7 @@ jobs:
                 (ecukes-load))
           EOF
           )"
-          ls -lah /root/.emacs.d/elpa*
+          ls -lah ~/.emacs.d/elpa* || true
 
       # note: the initial boot relies on too many moving parts
       #       therefore, many retries for failed packages and cache
@@ -142,7 +142,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /root/.emacs.d
+            ~/.emacs.d
           key: >-
             os-${{ matrix.os }}
             emacs-${{ matrix.emacs }}
@@ -184,5 +184,5 @@ jobs:
                   (error "Install test failed"))
               )
           EOF
-          )" || (ls -lah /root/.emacs.d/elpaca/repos*;exit 1)
-          ls -lah /root/.emacs.d/elpaca/repos
+          )" || (ls -lah ~/.emacs.d/elpaca/repos*;exit 1)
+          ls -lah ~/.emacs.d/elpaca/repos
