@@ -186,3 +186,55 @@ jobs:
           EOF
           )" || (ls -lah ~/.emacs.d/elpaca/repos*;exit 1)
           ls -lah ~/.emacs.d/elpaca/repos
+
+      - name: Run behavior tests
+        run: |-
+          ls -lah ~/.emacs.d/elpa*
+          ls -lah ~/.emacs.d/elpaca/repos
+          emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn
+                (load ".emacs")
+                (require 'elpaca)
+                ;; note: sets up the load-path
+                (elpaca elpaca-use-package (elpaca-use-package-mode))
+                (require 'f)
+                (require 'ecukes)
+
+                (add-hook 'ecukes-reporter-steps-without-definition-hook
+                          (lambda (steps)
+                            (ignore steps)
+                            (error "Missing implementations: %S" steps)))
+
+                (add-hook 'ecukes-reporter-scenario-failed-hook
+                          (lambda (scenario)
+                            (message "scenario failed: %S" scenario)))
+
+                (let ((features
+                       (f-glob "*.feature" (ecukes-project-features-path)))
+                      ;; note: C-set "noninteractive" blocks some functionality
+                      ;;       so exclude tests relying on it
+                      (ecukes-exclude-tags '("interactive-only")))
+                  (when features
+                    (setq features
+                          (delete (car (f-glob "install.feature"
+                                               (ecukes-project-features-path)))
+                                  features))
+                    (message "Running feature files:")
+                    (dolist (row features)
+                      (message "* %s" row)))
+
+                  (ecukes-load)
+                  (ecukes-reporter-use ecukes-cli-reporter)
+
+                  (ecukes-run features)
+
+                  (when (> (+ ecukes-stats-steps-failed
+                              ecukes-stats-scenarios-failed)
+                           0)
+                    (error "Tests failed"))
+                )
+              )
+          EOF
+          )"
