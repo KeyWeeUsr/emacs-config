@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 5.7
+;; Version: 6.0
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
