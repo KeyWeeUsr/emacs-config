@@ -154,6 +154,7 @@
       (let (proc)
         (unwind-protect
             (progn
+              ;; nitpick(noise): stub start-process result, e.g. make-process
               (setq proc (start-process
                           "abc" (get-buffer buff-name) "sleep" "2"))
               (term-mode)
@@ -165,7 +166,8 @@
                 (should (string= "C-c C-o" binding))
                 (should (lookup-key term-raw-map (kbd binding)))
                 (should (lookup-key (current-local-map) (kbd binding)))
-                (my-open-pr)))
+                (should (key-binding (kbd binding) nil t))
+                (execute-kbd-macro (kbd "C-c C-o"))))
           (delete-process proc))))))
 
 ;; missing check for C-x C-o in keybindings

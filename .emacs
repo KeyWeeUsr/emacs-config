@@ -573,17 +573,13 @@
                 ;; todo(undefined,declare-shadow): has source, ignored require
                 (term-mode))
               (re-search-backward "Create a pull request")
-              (re-search-forward "http") (re-search-backward "http")
-              (unwind-protect
-                  (progn
-                    (push-mark)
-                    (let ((what "^remote:"))
-                      (re-search-forward what) (re-search-backward what))
-                    (backward-char 1)
-                    (browse-url
-                     (string-replace "\n" "" (buffer-substring-no-properties
-                                              (mark) (point)))))
-                (pop-mark)))
+              (let (pr-url)
+                (re-search-forward "http")
+                (backward-word)
+                (setq pr-url (buffer-substring-no-properties
+                              (point) (line-end-position)))
+                (when (read-string (format "Open URL: %S" pr-url))
+                  (browse-url (string-trim pr-url)))))
           (with-no-warnings
             ;; todo(undefined,declare-shadow): has source, ignored require
             (term-char-mode)))))))
@@ -598,7 +594,9 @@
 (use-package multi-term
   :ensure (:depth 1)
   :after term
-  :bind ("C-c |" . #'multi-term-leftside)
+  :bind (:map term-mode-map
+         ("C-c |" . #'multi-term-leftside)
+         ("C-c C-o" . my-open-pr))
   :config
   (progn
     (setq term-bind-key-alist
@@ -623,8 +621,7 @@
             ("M-," . term-send-raw)
             ("M-." . comint-dynamic-complete)
             ("C-c C-j" . (lambda () (interactive) (term-mode)))
-            ("C-c C-k" . (lambda () (interactive) (term-char-mode)))
-            ("C-c C-o" . my-open-pr))))
+            ("C-c C-k" . (lambda () (interactive) (term-char-mode))))))
   :init
   (progn
     (defun m()
