@@ -572,6 +572,7 @@
               (with-no-warnings
                 ;; todo(undefined,declare-shadow): has source, ignored require
                 (term-mode))
+              (goto-char (point-max))
               (re-search-backward "Create a pull request")
               (let (pr-url)
                 (re-search-forward "http")
