@@ -594,9 +594,7 @@
 (use-package multi-term
   :ensure (:depth 1)
   :after term
-  :bind (("C-c |" . #'multi-term-leftside)
-         :map term-mode-map
-         ("C-c C-o" . my-open-pr))
+  :bind (("C-c |" . #'multi-term-leftside))
   :config
   (progn
     (setq term-bind-key-alist
@@ -621,7 +619,8 @@
             ("M-," . term-send-raw)
             ("M-." . comint-dynamic-complete)
             ("C-c C-j" . (lambda () (interactive) (term-mode)))
-            ("C-c C-k" . (lambda () (interactive) (term-char-mode))))))
+            ("C-c C-k" . (lambda () (interactive) (term-char-mode)))
+            ("C-c C-o" . my-open-pr))))
   :init
   (progn
     (defun m()
