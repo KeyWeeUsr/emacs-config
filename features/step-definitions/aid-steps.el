@@ -16,11 +16,15 @@
 
 (When "^point in buffer \"\\([^\"]+\\)\" is at \"\\([^\"]+\\)\"$"
   (lambda (buff-name pnt)
-    (with-current-buffer (get-buffer buff-name)
-      (if (string= "point-max" pnt)
-          (setq pnt (point-max))
-        (setq pnt (string-to-number pnt)))
-      (goto-char pnt))))
+    (let ((buff-target buff-name))
+      (cond ((string= "multi-term" buff-name)
+             (setq buff-target (car (last multi-term-buffer-list))))
+            (t (get-buffer buff-name)))
+      (with-current-buffer buff-target
+        (if (string= "point-max" pnt)
+            (setq pnt (point-max))
+          (setq pnt (string-to-number pnt)))
+        (goto-char pnt)))))
 
 (And "^I select previous word in buffer \"\\([^\"]+\\)\"$"
   (lambda (buff-name)
@@ -148,35 +152,44 @@
               (should (string= (format "show-paren-%s" (caddr loc-point-color))
                                (overlay-get (car overlays) 'face))))))))))
 
-(When "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
-  (lambda (binding buff-name)
-    (with-current-buffer (get-buffer-create buff-name)
-      (let (proc)
-        (unwind-protect
-            (progn
-              ;; nitpick(noise): stub start-process result, e.g. make-process
-              (setq proc (start-process
-                          "abc" (get-buffer buff-name) "sleep" "2"))
-              (term-mode)
-              (should (term-in-line-mode))
-              (display-buffer-in-side-window
-               (get-buffer buff-name) '((side . bottom)))
-              (with-selected-window (get-buffer-window buff-name)
-                (should (fboundp 'my-open-pr))
-                (should (string= "C-c C-o" binding))
-                (should (lookup-key term-raw-map (kbd binding)))
-                (should (lookup-key (current-local-map) (kbd binding)))
-                (should (key-binding (kbd binding) nil t))
-                (execute-kbd-macro (kbd "C-c C-o"))))
-          (delete-process proc))))))
+(Given "^multi-term terminal launches$"
+  (lambda ()
+    (multi-term)))
 
-;; missing check for C-x C-o in keybindings
-;; missing opening trigger and mock calls capturing
-(Then "^browser opens \"\\([^\"]+\\)\" url$"
+(Given "^multi-term buffer contains \"\\([^\"]*\\)\"$"
+  (lambda (contents)
+    (with-current-buffer (car (last multi-term-buffer-list))
+      (accept-process-output nil 1)
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (term-mode)
+          (goto-char (point-min))
+          (insert (string-replace "\\n" "\n" contents))))
+      (term-char-mode))))
+
+(Given "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
+  (lambda (binding buff-name)
+    (let ((buff-target buff-name))
+      (cond ((string= "multi-term" buff-name)
+             (setq buff-target (car (last multi-term-buffer-list))))
+            (t (get-buffer buff-name)))
+      (with-current-buffer buff-target
+        (should (term-in-char-mode))
+        (should (fboundp 'my-open-pr))
+        (should (lookup-key term-raw-map (kbd binding)))
+        (should (lookup-key (current-local-map) (kbd binding)))
+        (should (key-binding (kbd binding) nil t))
+        (execute-kbd-macro (kbd binding))))))
+
+(Then "^browser should open \"\\([^\"]+\\)\" url$"
   (lambda (arg)
     (should (string= arg (car aid-mock-calls)))
     (should (= 1 (length aid-mock-calls)))))
 
+(Then "^no multi-term buffer should remain open$"
+  (lambda ()
+    (accept-process-output nil 1)
+    (should-not multi-term-buffer-list)))
 
 (And "^mode \"\\([^\"]+\\)\" is activated$"
   (lambda (arg)
