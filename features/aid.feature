@@ -81,8 +81,12 @@ Feature: Editing aid
 
   Scenario: Opening a pull request through remote reference
     Given emacs loads
-    And temp buffer "open-pr" contains "Create a pull request\nremote: http://localhost\nremote:"
-    And point in buffer "open-pr" is at "point-max"
+    And multi-term terminal launches
+    And multi-term buffer contains "Create a pull request\nremote: http://localhost\nremote:"
+    And point in buffer "multi-term" is at "point-max"
 
-    When I press "C-c C-o" in buffer "open-pr"
-    Then browser opens "http://localhost" url
+    When I press "C-c C-o" in buffer "multi-term"
+    Then browser should open "http://localhost" url
+
+    When I press "C-d" in buffer "multi-term"
+    Then no multi-term buffer should remain open
