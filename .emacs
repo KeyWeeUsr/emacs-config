@@ -594,8 +594,8 @@
 (use-package multi-term
   :ensure (:depth 1)
   :after term
-  :bind (:map term-mode-map
-         ("C-c |" . #'multi-term-leftside)
+  :bind (("C-c |" . #'multi-term-leftside)
+         :map term-mode-map
          ("C-c C-o" . my-open-pr))
   :config
   (progn
