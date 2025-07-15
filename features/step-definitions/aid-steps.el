@@ -10,9 +10,16 @@
   (setq aid-mock-calls (push url aid-mock-calls)))
 (Before
  (setq aid-mock-calls nil)
- (advice-add 'browse-url :override #'aid-browse-mock))
+ (advice-add 'browse-url :override #'aid-browse-mock
+             '((name . ecukes-test-aid-browse-url))))
+
 (After
- (advice-remove 'browse-url #'aid-browse-mock))
+ (dolist (sym '(read-string))
+   (advice-mapc (lambda (func props)
+                  (when (string-prefix-p "ecukes-test-aid-"
+                                         (format "%s" (alist-get 'name props)))
+                    (advice-remove sym func)))
+                sym)))
 
 (When "^point in buffer \"\\([^\"]+\\)\" is at \"\\([^\"]+\\)\"$"
   (lambda (buff-name pnt)
