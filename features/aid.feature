@@ -44,10 +44,10 @@ Feature: Editing aid
   Scenario: Shortcuts for Org mode blocks
     Given emacs loads
     And temp buffer "org-shortcuts" contains ""
-    And mode "org-mode" is activated
-    And advice for "read-string" returns "ASK"
+    And mode "org-mode" in buffer "org-shortcuts" is activated
+    And advice for user input returns "ASK"
 
-    Then inserting "<text>" and pressing "TAB" should convert to:
+    Then shortcut "<text>" in buffer "org-shortcuts" should become "<result>":
       | text | result                                                                   |
       | <a   | #+begin_export ascii\nP\n#+end_export                                    |
       | <c   | #+begin_center\nP\n#+end_center                                          |
