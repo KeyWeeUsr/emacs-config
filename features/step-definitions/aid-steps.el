@@ -33,7 +33,7 @@
           (setq pnt (string-to-number pnt)))
         (goto-char pnt)))))
 
-(And "^I select previous word in buffer \"\\([^\"]+\\)\"$"
+(When "^I select previous word in buffer \"\\([^\"]+\\)\"$"
   (lambda (buff-name)
     (let ((buff (get-buffer buff-name)))
       (with-current-buffer buff
@@ -63,7 +63,7 @@
           (should (use-region-p))
           (should (string= region (format "%s" (region-bounds)))))))))
 
-(And "^I type \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
+(When "^I type \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
   (lambda (text buff-name)
     (with-current-buffer (get-buffer buff-name)
       (display-buffer buff-name)
@@ -71,7 +71,7 @@
         ;; note: requires display-buffer & with-selected-window
         (execute-kbd-macro text)))))
 
-(Given "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]+\\)\":$"
+(When "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]+\\)\":$"
   (lambda (buff-name contents data)
     (let ((header (car data)))
       (should (string-match-p (nth 0 header) buff-name))
@@ -110,7 +110,7 @@
                 (should (string= rowcol (match-string 0 text)))
               (error "should never happen: %S" text)))))))))
 
-(And "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]*\\)\"$"
+(Given "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]*\\)\"$"
   (lambda (buff-name contents)
     (with-current-buffer (get-buffer-create buff-name)
       (insert (string-replace "\\n" "\n" contents)))))
@@ -135,9 +135,6 @@
       (let ((item-buff-name (nth 0 item))
             (item-highlight (nth 1 item)))
         (with-current-buffer (get-buffer item-buff-name)
-          ;; (display-buffer-in-side-window (get-buffer item-buff-name) '((side . bottom)))
-          ;; (with-selected-window (get-buffer-window item-buff-name)
-          ;; (show-paren-mode)
           (dolist (loc-point-color (string-split item-highlight ","))
             (setq loc-point-color (string-split loc-point-color ":"))
             (goto-char (string-to-number (car loc-point-color)))
@@ -175,7 +172,7 @@
       (term-char-mode)
       (accept-process-output nil 1))))
 
-(Given "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
+(When "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
   (lambda (binding buff-name)
     (let ((buff-target buff-name))
       (cond ((string= "multi-term" buff-name)
