@@ -165,7 +165,8 @@
           (term-mode)
           (goto-char (point-min))
           (insert (string-replace "\\n" "\n" contents))))
-      (term-char-mode))))
+      (term-char-mode)
+      (accept-process-output nil 1))))
 
 (Given "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
   (lambda (binding buff-name)
