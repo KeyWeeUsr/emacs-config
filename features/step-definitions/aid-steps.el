@@ -74,7 +74,7 @@
       (let ((buff-name (nth 0 item))
             (contents (nth 1 item)))
         (with-current-buffer (get-buffer-create buff-name)
-          (insert contents))))))
+          (insert (string-replace "\\n" "\n" contents)))))))
 
 (Then "^lighter in buffer \"\\([^\"]+\\)\" at \"\\([^\"]+\\)\" should show \"\\([^\"]+\\)\":$"
   (lambda (buff-name pnt rowcol data)
