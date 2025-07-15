@@ -64,7 +64,7 @@
         ;; note: requires display-buffer & with-selected-window
         (execute-kbd-macro text)))))
 
-(And "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]+\\)\":$"
+(Given "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]+\\)\":$"
   (lambda (buff-name contents data)
     (let ((header (car data)))
       (should (string-match-p (nth 0 header) buff-name))
