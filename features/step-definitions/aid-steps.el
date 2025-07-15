@@ -196,17 +196,41 @@
     (accept-process-output nil 1)
     (should-not multi-term-buffer-list)))
 
-(And "^mode \"\\([^\"]+\\)\" is activated$"
-  (lambda (arg)
+(Given "^mode \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\" is activated$"
+  (lambda (mode buff-name)
+    (let ((allowed '(org-mode)))
+      (setq mode (intern mode))
+      (should (member mode allowed))
+      (with-current-buffer (get-buffer buff-name)
+        (funcall mode)))))
 
-    ))
+(Given "^advice for user input returns \"\\([^\"]+\\)\"$"
+  (lambda (input)
+    (advice-add 'read-string :override (lambda (&rest _) "ASK")
+                '((name . ecukes-test-aid-read-string)))))
 
-(And "^advice for \"\\([^\"]+\\)\" returns \"\\([^\"]+\\)\"$"
-  (lambda (arg-1 arg-2)
 
-    ))
+(Then "^shortcut \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\":$"
+  (lambda (contents buff-name result data)
+    (let ((header (car data)))
+      (should (string-match-p (nth 0 header) contents))
+      (should (string-match-p (nth 1 header) result)))
 
-(Then "^inserting \"\\([^\"]+\\)\" and pressing \"\\([^\"]+\\)\" should convert to:$"
-  (lambda (arg-1 arg-2 arg-3)
-
-    ))
+    (dolist (item (cdr data))
+      (let ((contents (nth 0 item))
+            (result (string-replace "\\n" "\n" (nth 1 item)))
+            (buff (get-buffer-create buff-name))
+            (point-loc ))
+        (with-current-buffer buff
+          (display-buffer buff)
+          (with-selected-window (get-buffer-window buff)
+            (insert (string-replace "\\n" "\n" contents))
+            (should (= (point-max) (point)))
+            (should (featurep 'org-tempo))
+            (should-not (eq 'fundamental-mode major-mode))
+            (execute-kbd-macro (kbd "TAB"))
+            (let ((case-fold-search nil))
+              ;; note: point index is 1-based, match is 0-based
+              (should (= (1+ (string-match "P" result nil t)) (point))))
+            (should (string= (string-replace "P" "" result) (buffer-string)))
+            (erase-buffer)))))))
