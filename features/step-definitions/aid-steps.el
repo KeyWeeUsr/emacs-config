@@ -1,4 +1,4 @@
-;; -*- lexical-binding: nil; -*-
+;; -*- lexical-binding: t; -*-
 (When "^emacs loads$"
   (lambda ()
     (should after-init-time)
