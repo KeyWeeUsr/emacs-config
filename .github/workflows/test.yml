@@ -1,4 +1,5 @@
 # act -j compile --use-new-action-cache --action-offline-mode
+# act -j test --use-new-action-cache --action-offline-mode
 
 # todo(artifacts): ~/.emacs.d/elpa,elpaca; chown -R 1000:1000, tgz, sign
 name: CI
@@ -46,7 +47,53 @@ jobs:
               --load <(echo "(setq byte-compile-error-on-warn t)") \
               --eval '(unless (byte-compile-file ".emacs") (kill-emacs 1))'
 
+  prebuild:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+        emacs: [
+          # '27.1', '27.2',
+          # '28.1',
+          # '28.2',
+          # '29.1', '29.2',
+          '29.3',
+          # 'snapshot'
+        ]
+
+    container:
+      image: docker:dind
+    steps:
+      - run: |
+          # note: act & local registry
+          docker images --filter \
+              'reference=keyweeusr/emacs-with-node:${{ matrix.emacs }}' \
+              | sed 1d \
+              | read \
+              && exit 0
+
+          # note: check if prebuilt already
+          docker pull keyweeusr/emacs-with-node:${{ matrix.emacs }} \
+          && exit 0 \
+          || true
+
+          # note: patch & push
+          docker run --name tmp -i silex/emacs:${{ matrix.emacs }} sh -c '
+          apt update
+          apt install -y nodejs git \
+              --no-install-recommends \
+              --no-install-suggests
+          '
+          docker commit tmp keyweeusr/emacs-with-node:${{ matrix.emacs }}
+          docker rm -f tmp
+          docker login -u ${{ secrets.DOCKER_USERNAME }} --password "${{ secrets.DOCKER_TOKEN }}"
+          docker push keyweeusr/emacs-with-node:${{ matrix.emacs }}
+          docker logout
+
   test:
+    needs: prebuild
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -65,7 +112,7 @@ jobs:
           - 0.6.18
 
     container:
-      image: silex/emacs:${{ matrix.emacs }}
+      image: keyweeusr/emacs-with-node:${{ matrix.emacs }}
     defaults:
       run:
         shell: bash
@@ -75,14 +122,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # todo(offline): cache or pre-build
-      - name: Ensure clean byte-compilation
-        run: |
-          apt update
-          apt install -y nodejs git \
-              --no-install-recommends \
-              --no-install-suggests
 
       - name: Cache Ecukes
         id: cache-ecukes
