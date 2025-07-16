@@ -45,14 +45,16 @@ Feature: Editing aid
     # nitpick: cheap check, expand into an exact feature to allow lib swapping
     Then minor mode "global-so-long-mode" should be active
 
-  Scenario: Shortcuts for Org mode blocks
+  Scenario Outline: Shortcuts for Org mode blocks
     Given emacs loads
     And test buffer is "org-shortcuts"
     And buffer contains ""
     And mode "org-mode" is active
     And advice for user input returns "ASK"
 
-    Then shortcut "<text>" should become "<result>":
+    Then shortcut "<text>" should become "<result>"
+
+    Examples:
       | text | result                                                                   |
       | <a   | #+begin_export ascii\nP\n#+end_export                                    |
       | <c   | #+begin_center\nP\n#+end_center                                          |

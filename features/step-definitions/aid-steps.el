@@ -82,19 +82,6 @@
           ;; note: requires display-buffer & with-selected-window
           (execute-kbd-macro text))))))
 
-;; (When "^buffer contains \"\\([^\"]+\\)\":$"
-;;   (lambda (buff-name contents data)
-;;     (unless test-buffer (error "Missing test buffer"))
-;;     (let ((header (car data)))
-;;       (should (string-match-p (nth 0 header) buff-name))
-;;       (should (string-match-p (nth 1 header) contents)))
-
-;;     (dolist (item (cdr data))
-;;       (let ((buff-name (nth 0 item))
-;;             (contents (nth 1 item)))
-;;         (with-current-buffer (get-buffer-create buff-name)
-;;           (insert (string-replace "\\n" "\n" contents)))))))
-
 (Then "^lighter at \"\\([^\"]+\\)\" should show \"\\([^\"]+\\)\":$"
   (lambda (pnt rowcol data)
     (unless test-buffer (error "Missing test buffer"))
@@ -223,28 +210,21 @@
                 '((name . ecukes-test-aid-read-string)))))
 
 
-(Then "^shortcut \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\":$"
-  (lambda (contents result data)
+(Then "^shortcut \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\"$"
+  (lambda (contents result)
     (unless test-buffer (error "Missing test buffer"))
-    (let ((header (car data)))
-      (should (string-match-p (nth 0 header) contents))
-      (should (string-match-p (nth 1 header) result)))
-
-    (dolist (item (cdr data))
-      (let ((contents (nth 0 item))
-            (result (string-replace "\\n" "\n" (nth 1 item)))
-            (buff (get-buffer-create test-buffer))
-            (point-loc ))
-        (with-current-buffer buff
-          (display-buffer buff)
-          (with-selected-window (get-buffer-window buff)
-            (insert (string-replace "\\n" "\n" contents))
-            (should (= (point-max) (point)))
-            (should (featurep 'org-tempo))
-            (should-not (eq 'fundamental-mode major-mode))
-            (execute-kbd-macro (kbd "TAB"))
-            (let ((case-fold-search nil))
-              ;; note: point index is 1-based, match is 0-based
-              (should (= (1+ (string-match "P" result nil t)) (point))))
-            (should (string= (string-replace "P" "" result) (buffer-string)))
-            (erase-buffer)))))))
+    (setq result (string-replace "\\n" "\n" result))
+    (let ((buff (get-buffer test-buffer)))
+      (with-current-buffer buff
+        (display-buffer buff)
+        (with-selected-window (get-buffer-window buff)
+          (insert (string-replace "\\n" "\n" contents))
+          (should (= (point-max) (point)))
+          (should (featurep 'org-tempo))
+          (should-not (eq 'fundamental-mode major-mode))
+          (execute-kbd-macro (kbd "TAB"))
+          (let ((case-fold-search nil))
+            ;; note: point index is 1-based, match is 0-based
+            (should (= (1+ (string-match "P" result nil t)) (point))))
+          (should (string= (string-replace "P" "" result) (buffer-string)))
+          (erase-buffer))))))
