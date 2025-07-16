@@ -21,40 +21,49 @@
                     (advice-remove sym func)))
                 sym)))
 
-(When "^point in buffer \"\\([^\"]+\\)\" is at \"\\([^\"]+\\)\"$"
-  (lambda (buff-name pnt)
-    (let ((buff-target buff-name))
-      (cond ((string= "multi-term" buff-name)
-             (setq buff-target (car (last multi-term-buffer-list))))
-            (t (get-buffer buff-name)))
-      (with-current-buffer buff-target
-        (if (string= "point-max" pnt)
-            (setq pnt (point-max))
-          (setq pnt (string-to-number pnt)))
-        (goto-char pnt)))))
+(When "^point is at \"\\([^\"]+\\)\"$"
+  (lambda (pnt)
+    (unless test-buffer (error "Missing test buffer"))
+    (with-current-buffer (get-buffer test-buffer)
+      (if (string= "point-max" pnt)
+          (setq pnt (point-max))
+        (setq pnt (string-to-number pnt)))
+      (goto-char pnt))))
 
-(When "^I select previous word in buffer \"\\([^\"]+\\)\"$"
-  (lambda (buff-name)
-    (let ((buff (get-buffer buff-name)))
+(When "^point in multi-term buffer is at \"\\([^\"]+\\)\"$"
+  (lambda (pnt)
+    (with-current-buffer (car (last multi-term-buffer-list))
+      (if (string= "point-max" pnt)
+          (setq pnt (point-max))
+        (setq pnt (string-to-number pnt)))
+      (goto-char pnt))))
+
+(When "^I select previous word$"
+  (lambda ()
+    (unless test-buffer (error "Missing test buffer"))
+    (let ((buff (get-buffer test-buffer)))
       (with-current-buffer buff
         (display-buffer buff)
         (with-selected-window (get-buffer-window buff)
           ;; note: requires display-buffer & with-selected-window
           (execute-kbd-macro (kbd "M-S-b")))))))
 
-(Then "^mark in temp buffer \"\\([^\"]+\\)\" should be active$"
-  (lambda (buff-name)
-    (with-current-buffer buff-name
+(Then "^mark should be active$"
+  (lambda ()
+    (unless test-buffer (error "Missing test buffer"))
+    (with-current-buffer (get-buffer test-buffer)
       (should mark-active))))
 
-(Then "^region in temp buffer \"\\([^\"]+\\)\" should be active$"
-  (lambda (buff-name)
-    (with-current-buffer buff-name
+(Then "^region should be active$"
+  (lambda ()
+    (unless test-buffer (error "Missing test buffer"))
+    (with-current-buffer (get-buffer test-buffer)
       (should (region-active-p)))))
 
-(Then "^active region in temp buffer \"\\([^\"]+\\)\" should select \"\\([^\"]+\\)\"$"
-  (lambda (buff-name region)
-    (let ((buff (get-buffer buff-name)))
+(Then "^active region should select \"\\([^\"]+\\)\"$"
+  (lambda (region)
+    (unless test-buffer (error "Missing test buffer"))
+    (let ((buff (get-buffer test-buffer)))
       (with-current-buffer buff
         (display-buffer buff)
         (with-selected-window (get-buffer-window buff)
@@ -63,66 +72,74 @@
           (should (use-region-p))
           (should (string= region (format "%s" (region-bounds)))))))))
 
-(When "^I type \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
-  (lambda (text buff-name)
-    (with-current-buffer (get-buffer buff-name)
-      (display-buffer buff-name)
-      (with-selected-window (get-buffer-window (get-buffer buff-name))
-        ;; note: requires display-buffer & with-selected-window
-        (execute-kbd-macro text)))))
+(When "^I type \"\\([^\"]+\\)\"$"
+  (lambda (text)
+    (unless test-buffer (error "Missing test buffer"))
+    (let ((buff (get-buffer test-buffer)))
+      (with-current-buffer buff
+        (display-buffer buff)
+        (with-selected-window (get-buffer-window buff)
+          ;; note: requires display-buffer & with-selected-window
+          (execute-kbd-macro text))))))
 
-(When "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]+\\)\":$"
-  (lambda (buff-name contents data)
-    (let ((header (car data)))
-      (should (string-match-p (nth 0 header) buff-name))
-      (should (string-match-p (nth 1 header) contents)))
+;; (When "^buffer contains \"\\([^\"]+\\)\":$"
+;;   (lambda (buff-name contents data)
+;;     (unless test-buffer (error "Missing test buffer"))
+;;     (let ((header (car data)))
+;;       (should (string-match-p (nth 0 header) buff-name))
+;;       (should (string-match-p (nth 1 header) contents)))
 
-    (dolist (item (cdr data))
-      (let ((buff-name (nth 0 item))
-            (contents (nth 1 item)))
-        (with-current-buffer (get-buffer-create buff-name)
-          (insert (string-replace "\\n" "\n" contents)))))))
+;;     (dolist (item (cdr data))
+;;       (let ((buff-name (nth 0 item))
+;;             (contents (nth 1 item)))
+;;         (with-current-buffer (get-buffer-create buff-name)
+;;           (insert (string-replace "\\n" "\n" contents)))))))
 
-(Then "^lighter in buffer \"\\([^\"]+\\)\" at \"\\([^\"]+\\)\" should show \"\\([^\"]+\\)\":$"
-  (lambda (buff-name pnt rowcol data)
+(Then "^lighter at \"\\([^\"]+\\)\" should show \"\\([^\"]+\\)\":$"
+  (lambda (pnt rowcol data)
+    (unless test-buffer (error "Missing test buffer"))
     (let ((header (car data)))
       (should (string-match-p (nth 0 header) pnt))
       (should (string-match-p (nth 1 header) rowcol)))
 
-    (with-current-buffer (get-buffer-create buff-name)
-      (display-buffer-in-side-window (get-buffer buff-name) '((side . bottom)))
+    (let ((buff (get-buffer test-buffer)))
+      (with-current-buffer buff
+        (display-buffer-in-side-window buff)
 
-      (with-selected-window (get-buffer-window buff-name)
-      (dolist (item (cdr data))
-        (force-mode-line-update t)
+        (with-selected-window (get-buffer-window buff)
+          (dolist (item (cdr data))
+            (force-mode-line-update t)
 
-        (let ((pnt (nth 0 item))
-              (rowcol (nth 1 item)))
-          (if (string= "point-max" pnt)
-              (setq pnt (point-max))
-            (setq pnt (string-to-number pnt)))
-          (goto-char pnt)
-          (if (= pnt 0) (should (= 1 (point))) (should (= pnt (point))))
+            (let ((pnt (nth 0 item))
+                  (rowcol (nth 1 item)))
+              (if (string= "point-max" pnt)
+                  (setq pnt (point-max))
+                (setq pnt (string-to-number pnt)))
+              (goto-char pnt)
+              (if (= pnt 0) (should (= 1 (point))) (should (= pnt (point))))
 
-          (let ((text (substring-no-properties
-                       (format-mode-line mode-line-position))))
-            (if (string-match "(\\([0-9]+\\),\\([0-9]+\\))" text)
-                (should (string= rowcol (match-string 0 text)))
-              (error "should never happen: %S" text)))))))))
+              (let ((text (substring-no-properties
+                           (format-mode-line mode-line-position))))
+                (if (string-match "(\\([0-9]+\\),\\([0-9]+\\))" text)
+                    (should (string= rowcol (match-string 0 text)))
+                  (error "should never happen: %S" text))))))))))
 
-(Given "^temp buffer \"\\([^\"]+\\)\" contains \"\\([^\"]*\\)\"$"
-  (lambda (buff-name contents)
-    (with-current-buffer (get-buffer-create buff-name)
+(Given "^buffer contains \"\\([^\"]*\\)\"$"
+  (lambda (contents)
+    (unless test-buffer (error "Missing test buffer"))
+    (with-current-buffer (get-buffer test-buffer)
       (insert (string-replace "\\n" "\n" contents)))))
 
-(Then "^temp buffer \"\\([^\"]+\\)\" should contain \"\\([^\"]+\\)\"$"
-  (lambda (buff-name contents)
-    (with-current-buffer (get-buffer buff-name)
+(Then "^buffer should contain \"\\([^\"]+\\)\"$"
+  (lambda (contents)
+    (unless test-buffer (error "Missing test buffer"))
+    (with-current-buffer (get-buffer test-buffer)
       (should (string= (string-replace "\\n" "\n" contents)
                        (buffer-string))))))
 
-(Then "^minor mode \"\\([^\"]+\\)\" should be activated$"
+(Then "^minor mode \"\\([^\"]+\\)\" should be active$"
   (lambda (mode-name)
+    (unless test-buffer (error "Missing test buffer"))
     (should (member 'delete-selection-mode minor-mode-list))))
 
 (Then "^temp buffer \"\\([^\"]+\\)\" in show-paren-mode should be highlighted by \"\\([^\"]+\\)\":$"
@@ -196,12 +213,13 @@
     (accept-process-output nil 1)
     (should-not multi-term-buffer-list)))
 
-(Given "^mode \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\" is activated$"
-  (lambda (mode buff-name)
+(Given "^mode \"\\([^\"]+\\)\" is active$"
+  (lambda (mode)
+    (unless test-buffer (error "Missing test buffer"))
     (let ((allowed '(org-mode)))
       (setq mode (intern mode))
       (should (member mode allowed))
-      (with-current-buffer (get-buffer buff-name)
+      (with-current-buffer (get-buffer test-buffer)
         (funcall mode)))))
 
 (Given "^advice for user input returns \"\\([^\"]+\\)\"$"
@@ -210,8 +228,9 @@
                 '((name . ecukes-test-aid-read-string)))))
 
 
-(Then "^shortcut \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\":$"
-  (lambda (contents buff-name result data)
+(Then "^shortcut \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\":$"
+  (lambda (contents result data)
+    (unless test-buffer (error "Missing test buffer"))
     (let ((header (car data)))
       (should (string-match-p (nth 0 header) contents))
       (should (string-match-p (nth 1 header) result)))
@@ -219,7 +238,7 @@
     (dolist (item (cdr data))
       (let ((contents (nth 0 item))
             (result (string-replace "\\n" "\n" (nth 1 item)))
-            (buff (get-buffer-create buff-name))
+            (buff (get-buffer-create test-buffer))
             (point-loc ))
         (with-current-buffer buff
           (display-buffer buff)

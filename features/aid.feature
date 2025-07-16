@@ -4,11 +4,12 @@ Feature: Editing aid
   @interactive-only
   Scenario: Rows and columns are on the mode line
     Given emacs loads
-    And temp buffer "rows-and-cols" contains "hello\nthere\n"
+    And test buffer is "rows-and-cols"
+    And buffer contains "hello\nthere\n"
 
-    Then minor mode "line-number-mode" should be activated
-    And minor mode "column-number-mode" should be activated
-    And lighter in buffer "rows-and-cols" at "<point>" should show "<rowcol>":
+    Then minor mode "line-number-mode" should be active
+    And minor mode "column-number-mode" should be active
+    And lighter at "<point>" should show "<rowcol>":
       |     point | rowcol |
       |         1 | (1,0)  |
       |         3 | (1,2)  |
@@ -20,34 +21,38 @@ Feature: Editing aid
       | point-max | (3,0)  |
 
   Scenario: Overwriting selections
-    When emacs loads
+    Given emacs loads
+    And test buffer is "overwriting"
 
-    Then minor mode "delete-selection-mode" should be activated
-    And minor mode "transient-mark-mode" should be activated
+    Then minor mode "delete-selection-mode" should be active
+    And minor mode "transient-mark-mode" should be active
 
-    When temp buffer "overwriting" contains "hello\nthere"
-    And point in buffer "overwriting" is at "point-max"
+    When buffer contains "hello\nthere"
+    And point is at "point-max"
     # M-S-b
-    And I select previous word in buffer "overwriting"
-    Then mark in temp buffer "overwriting" should be active
-    And region in temp buffer "overwriting" should be active
-    And active region in temp buffer "overwriting" should select "((7 . 12))"
+    And I select previous word
+    Then mark should be active
+    And region should be active
+    And active region should select "((7 . 12))"
 
-    When I type "world" in buffer "overwriting"
-    Then temp buffer "overwriting" should contain "hello\nworld"
+    When I type "world"
+    Then buffer should contain "hello\nworld"
 
   Scenario: Too long lines
     Given emacs loads
+    And test buffer is "overwriting"
+
     # nitpick: cheap check, expand into an exact feature to allow lib swapping
-    Then minor mode "global-so-long-mode" should be activated
+    Then minor mode "global-so-long-mode" should be active
 
   Scenario: Shortcuts for Org mode blocks
     Given emacs loads
-    And temp buffer "org-shortcuts" contains ""
-    And mode "org-mode" in buffer "org-shortcuts" is activated
+    And test buffer is "org-shortcuts"
+    And buffer contains ""
+    And mode "org-mode" is active
     And advice for user input returns "ASK"
 
-    Then shortcut "<text>" in buffer "org-shortcuts" should become "<result>":
+    Then shortcut "<text>" should become "<result>":
       | text | result                                                                   |
       | <a   | #+begin_export ascii\nP\n#+end_export                                    |
       | <c   | #+begin_center\nP\n#+end_center                                          |
@@ -83,7 +88,7 @@ Feature: Editing aid
     Given emacs loads
     And multi-term terminal launches
     And multi-term buffer contains "Create a pull request\nremote: http://localhost\nremote:"
-    And point in buffer "multi-term" is at "point-max"
+    And point in multi-term buffer is at "point-max"
 
     When I press "C-c C-o" in buffer "multi-term"
     Then browser should open "http://localhost" url
