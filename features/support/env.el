@@ -18,12 +18,25 @@
   (require 'ert))
 
 (defvar tests-run 0)
+(defvar test-buffer nil)
 
 ;; (Setup)
+
+(Given "^test buffer is \"\\([^\"]+\\)\"$"
+  (lambda (name)
+    (when test-buffer
+      (error "Test buffer was already set, bad cleanup!"))
+    (setq test-buffer name)
+    (should test-buffer)
+    (get-buffer-create test-buffer)))
 
 (Before)
 
 (After
- (setq tests-run (1+ tests-run)))
+ (setq tests-run (1+ tests-run))
+ (when test-buffer
+   (kill-buffer (get-buffer-create test-buffer)))
+ (setq test-buffer nil)
+ (should-not test-buffer))
 
 ;; (Teardown)
