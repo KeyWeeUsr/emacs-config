@@ -64,25 +64,22 @@ Feature: Editing aid
       | <v   | #+begin_verse\nP\n#+end_verse                                            |
       | <s   | #+name: ASK\n#+begin_src ASK :results output :exports both\nP\n#+end_src |
 
-  Scenario: Parenthesis pair is highlighted with point on
+  Scenario Outline: Parenthesis pair is highlighted with point on or near them
     Given emacs loads
+    And test buffer is "parens-highlight"
 
-    When temp buffer "<name>" contains "<contents>":
-      | name                     | contents |
-      | left-missing             | (        |
-      | missing-right            | )s       |
-      | left-right               | ()s      |
-      | left-left-right-missing  | (()s     |
-      | missing-left-right-right | ())s     |
+    When buffer contains "<contents>"
 
     # highlighting triggers at opening paren and one place after closing paren
-    Then temp buffer "<name>" in show-paren-mode should be highlighted by "<highlight>":
-      | name                     | highlight                        |
-      | left-missing             | 1:1:mismatch                     |
-      | missing-right            | 2:1:mismatch                     |
-      | left-right               | 1:1:match,3:2:match              |
-      | left-left-right-missing  | 1:1:mismatch,2:2:match,4:3:match |
-      | missing-left-right-right | 1:1:match,3:2:match,4:3:mismatch |
+    Then buffer in show-paren-mode should be highlighted by "<highlight>"
+
+    Examples:
+      | contents | highlight                        |
+      | (        | 1:1:mismatch                     |
+      | )s       | 2:1:mismatch                     |
+      | ()s      | 1:1:match,3:2:match              |
+      | (()s     | 1:1:mismatch,2:2:match,4:3:match |
+      | ())s     | 1:1:match,3:2:match,4:3:mismatch |
 
   Scenario: Opening a pull request through remote reference
     Given emacs loads

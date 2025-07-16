@@ -142,36 +142,31 @@
     (unless test-buffer (error "Missing test buffer"))
     (should (member 'delete-selection-mode minor-mode-list))))
 
-(Then "^temp buffer \"\\([^\"]+\\)\" in show-paren-mode should be highlighted by \"\\([^\"]+\\)\":$"
-  (lambda (buff-name highlight data)
-    (let ((header (car data)))
-      (should (string-match-p (nth 0 header) buff-name))
-      (should (string-match-p (nth 1 header) highlight)))
+(Then "^buffer in show-paren-mode should be highlighted by \"\\([^\"]+\\)\"$"
+  (lambda (highlight)
+    (unless test-buffer (error "Missing test buffer"))
+    (let ((buff (get-buffer test-buffer)))
+    (with-current-buffer buff
+      (dolist (loc-point-color (string-split highlight ","))
+        (setq loc-point-color (string-split loc-point-color ":"))
+        (goto-char (string-to-number (car loc-point-color)))
 
-    (dolist (item (cdr data))
-      (let ((item-buff-name (nth 0 item))
-            (item-highlight (nth 1 item)))
-        (with-current-buffer (get-buffer item-buff-name)
-          (dolist (loc-point-color (string-split item-highlight ","))
-            (setq loc-point-color (string-split loc-point-color ":"))
-            (goto-char (string-to-number (car loc-point-color)))
+        (should show-paren-mode)
+        (should (catch 'found
+                  (dolist (item timer-idle-list)
+                    (when (eq 'show-paren-function (aref item 5))
+                      (throw 'found t)))))
+        ;; note(idle): tricky to trigger
+        (show-paren-function)
 
-            (should show-paren-mode)
-            (should (catch 'found
-                      (dolist (item timer-idle-list)
-                        (when (eq 'show-paren-function (aref item 5))
-                          (throw 'found t)))))
-            ;; note(idle): tricky to trigger
-            (show-paren-function)
-
-            ;; example overlay list returned:
-            ;; (#<overlay from 1 to 2 in left-open-missing>)
-            (let* ((overlays
-                    (overlays-at (string-to-number (cadr loc-point-color)))))
-              (unless overlays
-                (error "should never happen: %s, %s" item-buff-name (point)))
-              (should (string= (format "show-paren-%s" (caddr loc-point-color))
-                               (overlay-get (car overlays) 'face))))))))))
+        ;; example overlay list returned:
+        ;; (#<overlay from 1 to 2 in left-open-missing>)
+        (let* ((overlays
+                (overlays-at (string-to-number (cadr loc-point-color)))))
+          (unless overlays
+            (error "should never happen: %s, %s" buff (point)))
+          (should (string= (format "show-paren-%s" (caddr loc-point-color))
+                           (overlay-get (car overlays) 'face)))))))))
 
 (Given "^multi-term terminal launches$"
   (lambda ()
