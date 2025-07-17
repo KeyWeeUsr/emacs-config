@@ -45,7 +45,9 @@
         ;; note(free-var,defvar-shadow): org-roam-db before needed
         (setq org-roam-db-location "/tmp/ignore-me")))
     (message "Restarting Emacs")
-    (restart-emacs)
+    (when (and (> emacs-major-version 28)
+               (fboundp 'restart-emacs))
+      (restart-emacs))
     (error "https://www.youtube.com/watch?v=OCsMKypvmB0")))
 
 ;; note(elpaca,begin): installer
