@@ -75,7 +75,11 @@ jobs:
 
       - name: Ensure clean byte-compilation
         run: |
-          ls -lah ~/.emacs.d/elpa/
+          echo -n "${{ matrix.emacs}}" \
+          | grep "28." \
+          && ls -lah ~/.emacs.d/elpa/ \
+          || true
+
           emacs --batch \
               --directory . \
               --load <(echo "(setq byte-compile-error-on-warn t)") \
