@@ -106,6 +106,18 @@
   (elpaca `(,@elpaca-order)))
 ;; note(elpaca,end): installer
 
+;; Install use-package if not present
+(ignore
+ (when (<= emacs-major-version 28)
+   (eval-when-compile
+     (add-to-list 'load-path (expand-file-name
+                              (car (file-expand-wildcards
+                                    "~/.emacs.d/elpa/use-package-*"))))
+     (add-to-list 'load-path (expand-file-name
+                              (car (file-expand-wildcards
+                                    "~/.emacs.d/elpa/bind-key-*"))))
+     (require 'use-package))))
+
 ;; Enable use-package :ensure support for Elpaca.
 (with-no-warnings
   ;; note(free-var): unquoted symbol of an extension in a macro false-positive
