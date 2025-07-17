@@ -31,8 +31,14 @@
                         (with-temp-buffer
                           (insert-file-literally ".emacs.elpaca.lock")
                           (read (buffer-string))))))
-      (let ((pass-max-tries 3)
-            (package-max-tries 3)
+
+      ;; note: compat is available only on lower versions
+      (when (string= (getenv "EMACS_LATEST") emacs-version)
+        (setq deps (delete nil (mapcar (lambda (item)
+                                         (unless (eq 'compat (car item)) item))
+                                       deps))))
+      (let ((pass-max-tries 5)
+            (package-max-tries 5)
             (repos (expand-file-name
                     (file-name-concat user-emacs-directory "elpaca" "repos")))
             (fail-count 0)
