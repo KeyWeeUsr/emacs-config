@@ -1376,15 +1376,14 @@
     (signal-process proc sig)))
 (add-hook 'process-menu-mode-hook
           (lambda ()
-            (keymap-set
-             process-menu-mode-map "d"
-             (lambda ()
-               (interactive)
-               (unwind-protect
-                   (progn
-                     (advice-add 'delete-process :override #'terminate-process)
-                     (process-menu-delete-process))
-                 (advice-remove 'delete-process #'terminate-process))))
-            (keymap-set process-menu-mode-map "D"
+            (define-key process-menu-mode-map (read-kbd-macro "d")
+                        (lambda ()
+                          (interactive)
+                          (unwind-protect
+                              (progn
+                                (advice-add 'delete-process :override #'terminate-process)
+                                (process-menu-delete-process))
+                            (advice-remove 'delete-process #'terminate-process))))
+            (define-key process-menu-mode-map (read-kbd-macro "D")
                         #'process-menu-delete-process)))
 ;;; .emacs ends here
