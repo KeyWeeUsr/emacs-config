@@ -108,8 +108,8 @@
 
 ;; Install use-package if not present
 (ignore
- (when (<= emacs-major-version 28)
-   (eval-when-compile
+ (eval-when-compile
+   (when (<= emacs-major-version 28)
      (add-to-list 'load-path (expand-file-name
                               (car (file-expand-wildcards
                                     "~/.emacs.d/elpa/use-package-*"))))
