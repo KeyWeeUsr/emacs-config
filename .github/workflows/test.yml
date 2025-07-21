@@ -238,6 +238,13 @@ jobs:
       # note: the initial boot relies on too many moving parts
       #       therefore, many retries for failed packages and cache
       #       and test the behavior afterwards (encourages me to lock too)
+      - name: Purge cache if Elpaca installer changes
+        id: elpaca-installer
+        run: |
+          echo "hash=$( \
+          sed -n '/note(elpaca-install,begin)/,/note(elpaca-install,end)/p' \
+          .emacs | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
       - name: Cache Elpaca bootstrap
         id: cache-elpaca
         uses: actions/cache@v4
@@ -248,15 +255,13 @@ jobs:
             os-${{ matrix.os }}
             emacs-${{ matrix.emacs }}
             elpaca-${{ hashFiles('.emacs.elpaca.lock') }}
-          # nitpick: might or might not be a good idea here; let's see
-          restore-keys: >-
-            os-${{ matrix.os }}
-            emacs-${{ matrix.emacs }}
-            elpaca-
+            installer-${{ steps.elpaca-installer.outputs.hash }}
 
       - name: Run installation behavior test
         if: steps.cache-elpaca.outputs.cache-hit != 'true'
         env:
+          # curl -s https://www.gnu.org/software/emacs/history.html \
+          #   | grep -m1 -Po 'Emacs \K\d+\.\d+(?= released)'
           EMACS_LATEST: 30.1
         run: |-
           emacs --batch \
