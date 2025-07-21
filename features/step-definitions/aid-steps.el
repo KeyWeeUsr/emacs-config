@@ -143,8 +143,8 @@
     (unless test-buffer (error "Missing test buffer"))
     (let ((buff (get-buffer test-buffer)))
     (with-current-buffer buff
-      (dolist (loc-point-color (string-split highlight ","))
-        (setq loc-point-color (string-split loc-point-color ":"))
+      (dolist (loc-point-color (split-string highlight ","))
+        (setq loc-point-color (split-string loc-point-color ":"))
         (goto-char (string-to-number (car loc-point-color)))
 
         (should show-paren-mode)
