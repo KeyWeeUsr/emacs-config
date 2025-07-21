@@ -5,9 +5,6 @@
 ;; Author: KeyWeeUsr
 ;; Version: 6.3
 
-;; (use-package)
-;; Package-Requires: ((emacs "29.1"))
-
 ;; (let)
 ;; Package-Requires: ((emacs "24.4"))
 
@@ -143,23 +140,38 @@
       ;; note(circular): compile requires elpaca, elpaca needs to bootstrap
       (elpaca-generate-autoloads "elpaca" repo))
     (load "./elpaca-autoloads")))
+
 (with-no-warnings
   ;; note(circular): compile requires elpaca, elpaca needs to bootstrap
   (add-hook 'after-init-hook #'elpaca-process-queues)
-  (elpaca `(,@elpaca-order)))
-;; note(elpaca,end): installer
+  (elpaca `(,@elpaca-order))
+  (elpaca-wait))
 
-;; Install use-package if not present
-(ignore
- (eval-when-compile
-   (when (<= emacs-major-version 28)
-     (add-to-list 'load-path (expand-file-name
-                              (car (file-expand-wildcards
-                                    "~/.emacs.d/elpa/use-package-*"))))
-     (add-to-list 'load-path (expand-file-name
-                              (car (file-expand-wildcards
-                                    "~/.emacs.d/elpa/bind-key-*"))))
-     (require 'use-package))))
+;; note(use-package,begin): install use-package if not present
+(when (or (< emacs-major-version 29)
+          (and (<= emacs-major-version 29)
+               (< emacs-minor-version 1)))
+  (with-no-warnings
+    ;; note(circular): compile requires elpaca, elpaca needs to bootstrap
+    (elpaca '(use-package))
+    (elpaca-wait))
+  (eval-when-compile
+    ;; note: because compilation doesn't pick up elpaca ones
+    (let ((repos (concat
+                  (expand-file-name "elpaca/" user-emacs-directory) "repos/")))
+      (dolist (item '("use-package" "bind-key"))
+        (let ((what (concat repos item)))
+          (unless (file-exists-p what)
+            (when (or (< emacs-major-version 29)
+                      (and (<= emacs-major-version 29)
+                           (< emacs-minor-version 1)))
+              (error "Should exist: %S" what)))
+          (add-to-list 'load-path what))))
+    (require 'use-package)))
+;; note(use-package,end)
+
+;; note(elpaca,end): installer
+;; note(elpaca-install,end): whole installer, including bootstrap and early
 
 ;; Enable use-package :ensure support for Elpaca.
 (with-no-warnings
