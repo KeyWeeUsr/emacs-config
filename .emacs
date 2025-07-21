@@ -1433,6 +1433,9 @@
 (use-package ecukes
   :ensure (:depth 1))
 
+(use-package seq
+  :ensure (:depth 1))
+
 ;; Stop the `list-processes' SIGKILL insanity
 (defun terminate-process (proc)
   "Same as for `delete-process' + PID."
