@@ -473,13 +473,19 @@
 (use-package ansi-color
   :ensure nil
   :config
-  (progn
+  (eval-when-compile
+    (require 'ansi-color)
     (let ((what
            [default default default italic underline success warning error]))
-      (with-no-warnings
-        ;; obsoleted 28.1+
-        (setq ansi-color-faces-vector what))
-      (setq ansi-color-normal-colors-vector what)))
+      (if (or (< emacs-major-version 28)
+              (and (<= emacs-major-version 28)
+                   (< emacs-minor-version 1)))
+          (with-suppressed-warnings ((obsolete ansi-color-faces-vector))
+            ;; ‘ansi-color-faces-vector’ is an obsolete variable (as of 28.1);
+            ;; use ‘ansi-color-normal-colors-vector’ instead.
+            (setq ansi-color-faces-vector what))
+        (with-suppressed-warnings ((free-vars ansi-color-normal-colors-vector))
+          (setq ansi-color-normal-colors-vector what)))))
   :init
   ;; note(multi-term,color): render ansi escape colors
   ;; note: possibly https://stackoverflow.com/a/23382008/5994041
