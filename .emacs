@@ -1362,9 +1362,8 @@
 (advice-add
  'desktop-save :around
  (lambda (fn &rest args)
-   (if (file-exists-p (expand-file-name (file-name-concat
-                                         desktop-dirname
-                                         desktop-base-file-name)))
+   (if (file-exists-p
+        (expand-file-name (concat desktop-dirname desktop-base-file-name)))
        (when (bound-and-true-p my-desktop-save) (apply fn args))
      (apply fn args))))
 
@@ -1412,13 +1411,12 @@
   :ensure (:depth 1)
   :init
   ;; broken upstream recipe, copy the .json
-  (let* ((langs-name "gherkin-languages.json")
+  (let* ((langs-name "/gherkin-languages.json")
          (recipe (elpaca-recipe 'feature-mode))
          (build-dir (elpaca-build-dir recipe))
-         (langs (file-name-concat build-dir langs-name)))
+         (langs (concat build-dir langs-name)))
     (unless (file-exists-p langs)
-      (copy-file (file-name-concat (elpaca-repo-dir recipe) langs-name)
-                 langs))))
+      (copy-file (concat (elpaca-repo-dir recipe) langs-name) langs))));)
 
 (use-package verb
   :ensure (:depth 1))
