@@ -163,12 +163,9 @@
             (when (file-exists-p (concat repos "bind-key"))
               ;; note: use-package depencency
               (setq expected (1+ expected)))))
-        (when (or (< emacs-major-version 28)
-                  (and (<= emacs-major-version 28)
-                       (< emacs-minor-version 1)))
-          ;; fixing seq for compat
-          (when (file-exists-p (concat repos "seq"))
-            (setq expected (1+ expected))))
+        ;; fixing seq for compat
+        (when (file-exists-p (concat repos "seq"))
+          (setq expected (1+ expected)))
         (unless (and (= expected
                         (or (alist-get 'finished elpaca--status-counts) 0))
                      (not basic-test-elpaca-loaded))
