@@ -91,9 +91,10 @@ jobs:
               ~/.emacs.d/elpaca/repos/bind-key \
           && ls -lah ~/.emacs.d/elpaca/repos
 
+          echo '(setq byte-compile-error-on-warn t)' > error-on-warn
           emacs --batch \
               --directory . \
-              --load <(echo "(setq byte-compile-error-on-warn t)") \
+              --load error-on-warn \
               --eval '(unless (byte-compile-file ".emacs") (kill-emacs 1))'
 
   prebuild:
