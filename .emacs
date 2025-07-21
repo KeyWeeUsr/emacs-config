@@ -1386,8 +1386,10 @@
   :ensure (:depth 1)
   :bind (("M-o" . #'ace-window))
   :config
-  (progn (add-hook 'term-mode-hook
-                   (lambda () (keymap-set term-raw-map "M-o" #'ace-window)))))
+  (progn
+    (add-hook 'term-mode-hook (lambda ()
+                                (define-key term-raw-map (read-kbd-macro "M-o")
+                                            #'ace-window)))))
 
 (use-package httprepl
   :ensure (:depth 1))
