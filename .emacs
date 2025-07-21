@@ -263,13 +263,13 @@
   (defun my-fix-mac ()
     "Fix Emacs breaking on MacOS."
     (interactive)
-    (eval-when-compile (require 'tool-bar))
-    (require 'tool-bar)
-    (when (eq window-system 'ns)
-      (tool-bar-mode -1)
-      (setq frame-resize-pixelwise t)
-      (dotimes (_ 3)
-        (toggle-frame-maximized)))))
+    (eval-when-compile
+      (require 'tool-bar)
+      (when (eq window-system 'ns)
+        (tool-bar-mode -1)
+        (setq frame-resize-pixelwise t)
+        (dotimes (_ 3)
+          (toggle-frame-maximized))))))
 )
 ;; note(macos,end): fixes & patching around
 
