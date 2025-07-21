@@ -115,13 +115,22 @@
   (lambda (contents)
     (unless test-buffer (error "Missing test buffer"))
     (with-current-buffer (get-buffer test-buffer)
-      (insert (string-replace "\\n" "\n" contents)))))
+      (insert contents)
+      (goto-char (point-min))
+      (while (search-forward "\\n" nil t)
+        (replace-match "\n" nil t))
+      (goto-char (point-max)))))
 
 (Then "^buffer should contain \"\\([^\"]+\\)\"$"
   (lambda (contents)
     (unless test-buffer (error "Missing test buffer"))
     (with-current-buffer (get-buffer test-buffer)
-      (should (string= (string-replace "\\n" "\n" contents)
+      (should (string= (with-temp-buffer
+                         (insert contents)
+                         (goto-char (point-min))
+                         (while (search-forward "\\n" nil t)
+                           (replace-match "\n" nil t))
+                         (buffer-string))
                        (buffer-string))))))
 
 (Then "^minor mode \"\\([^\"]+\\)\" should be active$"
@@ -167,7 +176,12 @@
         (save-excursion
           (term-mode)
           (goto-char (point-min))
-          (insert (string-replace "\\n" "\n" contents))))
+          (insert (with-temp-buffer
+                    (insert contents)
+                    (goto-char (point-min))
+                    (while (search-forward "\\n" nil t)
+                      (replace-match "\n" nil t))
+                    (buffer-string)))))
       (term-char-mode)
       (accept-process-output nil 1))))
 
@@ -213,18 +227,36 @@
 (Then "^shortcut \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\"$"
   (lambda (contents result)
     (unless test-buffer (error "Missing test buffer"))
-    (setq result (string-replace "\\n" "\n" result))
+    (setq result (with-temp-buffer
+                   (insert result)
+                   (goto-char (point-min))
+                   (while (search-forward "\\n" nil t)
+                     (replace-match "\n" nil t))
+                   (buffer-string)))
     (let ((buff (get-buffer test-buffer)))
       (with-current-buffer buff
         (display-buffer buff)
         (with-selected-window (get-buffer-window buff)
-          (insert (string-replace "\\n" "\n" contents))
+          (insert (with-temp-buffer
+                    (insert contents)
+                    (goto-char (point-min))
+                    (while (search-forward "\\n" nil t)
+                      (replace-match "\n" nil t))
+                    (buffer-string)))
           (should (= (point-max) (point)))
           (should (featurep 'org-tempo))
           (should-not (eq 'fundamental-mode major-mode))
           (execute-kbd-macro (kbd "TAB"))
-          (let ((case-fold-search nil))
+          (let ((case-fold-search nil)
+                (inhibit-changing-match-data t))
             ;; note: point index is 1-based, match is 0-based
-            (should (= (1+ (string-match "P" result nil t)) (point))))
-          (should (string= (string-replace "P" "" result) (buffer-string)))
+            (should (= (1+ (string-match "P" result nil)) (point))))
+          (let ((case-fold-search nil))
+            (should (string= (with-temp-buffer
+                               (insert result)
+                               (goto-char (point-min))
+                               (while (search-forward "P" nil t)
+                                 (replace-match "" nil t))
+                               (buffer-string))
+                             (buffer-string))))
           (erase-buffer))))))
