@@ -20,12 +20,13 @@ jobs:
         os:
           - ubuntu-latest
         emacs: [
-          # '27.1', '27.2',
-          # '28.1',
+          # note(elpaca): Emacs >= 27.1
+          '27.1',
+          '27.2',
+          '28.1',
           '28.2',
-          # use-package
-          # '29.1', # maximum buffer size exceeded error
-
+          # built-in use-package
+          '29.1',
           '29.2',
           '29.3',
           '29.4',
@@ -48,6 +49,7 @@ jobs:
       - name: Cache use-package
         if: |
           startsWith(matrix.emacs, '28.')
+          || startsWith(matrix.emacs, '27.')
         id: cache-use-package
         uses: actions/cache@v4
         with:
@@ -61,7 +63,7 @@ jobs:
 
       - name: Pre-install use-package for older versions
         if: |
-          startsWith(matrix.emacs, '28.')
+          (startsWith(matrix.emacs, '28.') || startsWith(matrix.emacs, '27.'))
           && steps.cache-use-package.outputs.cache-hit != 'true'
         run: |
           emacs --batch \
@@ -76,9 +78,18 @@ jobs:
       - name: Ensure clean byte-compilation
         run: |
           echo -n "${{ matrix.emacs}}" \
-          | grep "28." \
+          | grep -e "28." -e "27." \
           && ls -lah ~/.emacs.d/elpa/ \
           || true
+
+          echo -n "${{ matrix.emacs}}" \
+          | grep -e "28." -e "27." \
+          && mkdir -p ~/.emacs.d/elpaca/repos \
+          && ln -s ~/.emacs.d/elpa/use-package-*/ \
+              ~/.emacs.d/elpaca/repos/use-package \
+          && ln -s ~/.emacs.d/elpa/bind-key-*/ \
+              ~/.emacs.d/elpaca/repos/bind-key \
+          && ls -lah ~/.emacs.d/elpaca/repos
 
           emacs --batch \
               --directory . \
@@ -93,10 +104,12 @@ jobs:
         os:
           - ubuntu-latest
         emacs: [
-          # '27.1', '27.2',
-          # '28.1',
+          # note(elpaca): Emacs >= 27.1
+          '27.1',
+          '27.2',
+          '28.1',
           '28.2',
-          # use-package
+          # built-in use-package
           '29.1',
           '29.2',
           '29.3',
