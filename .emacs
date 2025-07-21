@@ -181,6 +181,10 @@
 
 ;; constants, etc
 (defvar my-epa-file-encrypt-to "")
+(defmacro my-call-if-defined (func &rest args)
+  `(if (fboundp ',func)
+       (,func ,@args)
+     (error "%s is not defined" ',func)))
 
 ;; Allow emacsclient -n file.ext opening
 (server-start)
@@ -719,7 +723,7 @@
           (split-window-below)
           (other-window 1)
           (balance-windows))
-        (delete-window)
+        (my-call-if-defined delete-window)
         (other-window 1)
         (balance-windows)))))
 
@@ -1161,11 +1165,11 @@
 ;; note(window,begin): Bindings for quicker window size and buffer manipulation
 (use-package window
   :ensure nil
-  :bind (("C-c <up>" . #'shrink-window)
-         ("C-c <down>" . #'enlarge-window)
-         ("C-c <left>" . #'shrink-window-horizontally)
-         ("C-c <right>" . #'enlarge-window-horizontally)
-         ("<f12>" . #'kill-buffer-and-window)))
+  :bind (("C-c <up>" . (my-call-if-defined shrink-window))
+         ("C-c <down>" . (my-call-if-defined enlarge-window))
+         ("C-c <left>" . (my-call-if-defined shrink-window-horizontally))
+         ("C-c <right>" . (my-call-if-defined enlarge-window-horizontally))
+         ("<f12>" . (my-call-if-defined kill-buffer-and-window))))
 ;; note(window,end): Bindings for quicker window size and buffer manipulation
 
 ;; note(unindent,begin): https://stackoverflow.com/a/2250155/5994041
@@ -1337,7 +1341,7 @@
           (split-window-below))
         (other-window 1)
         (balance-windows))
-      (delete-window)
+      (my-call-if-defined delete-window)
       (balance-windows)
       (while (not (eq current-buff (buffer-name (current-buffer))))
         (other-window 1)))))
