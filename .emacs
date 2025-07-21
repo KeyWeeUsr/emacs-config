@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 6.2
+;; Version: 6.3
 
 ;; (use-package)
 ;; Package-Requires: ((emacs "29.1"))
@@ -23,14 +23,26 @@
 ;; This file is not part of GNU Emacs
 
 ;; todo(compile): with-suppressed-warnings vs with-no-warnings
+(when (or (< emacs-major-version 27)
+          (and (= emacs-major-version 27)
+               (< emacs-minor-version 1)))
+  (error "Need 27.1 for Elpaca"))
 
 (unless (executable-find "git")
   (error "Install or ensure binary is on path: 'git'"))
 
-(let ((path (expand-file-name "early-init.el" user-emacs-directory)))
-  (unless (file-exists-p path)
-    (with-temp-file path
-      (insert ";; Example Elpaca early-init.el -*- lexical-binding: t; -*-
+;; note(elpaca-install,begin): whole installer, including bootstrap and early
+(defun my-init-early-init (&optional attempts-left)
+  (if attempts-left
+      (message "Restart attempts left: %s" attempts-left)
+    (setq attempts-left 3))
+  (when (<= attempts-left 0)
+    (error "https://www.youtube.com/watch?v=OCsMKypvmB0"))
+
+  (let ((path (expand-file-name "early-init.el" user-emacs-directory)))
+    (unless (file-exists-p path)
+      (with-temp-file path
+        (insert ";; Example Elpaca early-init.el -*- lexical-binding: t; -*-
 
 (setq package-enable-at-startup nil)
 
@@ -40,15 +52,46 @@
 ;; no-update-autoloads: t
 ;; End:
 "))
-    (unless (boundp 'org-roam-db-location)
-      (with-no-warnings
-        ;; note(free-var,defvar-shadow): org-roam-db before needed
-        (setq org-roam-db-location "/tmp/ignore-me")))
-    (message "Restarting Emacs")
-    (when (and (> emacs-major-version 28)
+      (unless (boundp 'org-roam-db-location)
+        (with-no-warnings
+          ;; note(free-var,defvar-shadow): org-roam-db before needed
+          (setq org-roam-db-location "/tmp/ignore-me")))
+
+      (message "Restarting Emacs")
+      (if (and (> emacs-major-version 28)
                (fboundp 'restart-emacs))
-      (restart-emacs))
-    (error "https://www.youtube.com/watch?v=OCsMKypvmB0")))
+          (progn (restart-emacs)
+                 (my-init-early-init 0))
+        ;; note: this path executes under some assumptions
+        ;; * (this) fresh Emacs install, or manually deleted
+        ;; * (lisp) no unsaved buffers around or no need to care about them
+        ;; * (lisp) no active processes in the background
+        ;; * (lisp) out of politeness call the hooks, but don't care really
+        ;; * (c) not running Emacs as service via systemd
+        ;; * fake-restart to re-init with knowing what's in early-init.el
+        ;; nitpick: exec+command-line-args would be nice, missing *exec* API
+        (run-hook-with-args-until-failure 'kill-emacs-query-functions)
+        (eval-when-compile
+          (if (or (> emacs-major-version 28)
+                  (and (>= emacs-major-version 28)
+                       (>= emacs-minor-version 1)))
+              (run-hook-query-error-with-timeout 'kill-emacs-hook)
+            (run-hooks 'kill-emacs-hook)))
+        ;; early-init.el specific
+        ;; "unload" package, as much as possible
+        (dolist (sym '(package-alist
+                       package--initialized
+                       package-archive-contents
+                       package--old-archive-priorities
+                       package-archive-priorities
+                       package--compatibility-table))
+          (makunbound sym))
+        (kill-all-local-variables)
+        (kill-all-abbrevs)
+        (message "load: %S, attempts: %S" path attempts-left)
+        (unless (load path)
+          (my-init-early-init (1- attempts-left)))))))
+(my-init-early-init)
 
 ;; note(elpaca,begin): installer
 (defvar elpaca-lock-file (format "%s.elpaca.lock" user-init-file))
