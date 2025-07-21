@@ -30,7 +30,9 @@
                                   (t (error "unhandled: %s" (type-of repo))))))
                         (with-temp-buffer
                           (insert-file-literally ".emacs.elpaca.lock")
-                          (read (buffer-string))))))
+                          (read (buffer-string)))))
+          (repos (expand-file-name
+                  (concat user-emacs-directory "elpaca/" "repos/"))))
 
       ;; note: compat is available only on lower versions
       (when (string= (getenv "EMACS_LATEST") emacs-version)
@@ -39,15 +41,31 @@
                                        deps))))
       (let ((pass-max-tries 5)
             (package-max-tries 5)
-            (repos (expand-file-name
-                    (file-name-concat user-emacs-directory "elpaca" "repos")))
             (fail-count 0)
             (fail-idx 0)
             (pass-tries 0)
             (package-tries 0)
             (initial-successes 0))
-        ;; initial wait
-        (elpaca-wait)
+        ;; note: simplified backport of (elpaca-wait),
+        ;;       but with knowing what's going on
+        (setq elpaca-verbosity 100)
+        (let ((start (current-time)))
+          (dolist (queue elpaca--queues)
+            (when (and (eq (elpaca-q<-status queue) 'incomplete)
+                       (elpaca-q<-elpacas queue)
+                       queue)
+              (setq elpaca--waiting t)
+              (elpaca-process-queues)
+              (while (not (eq (elpaca-q<-status queue) 'complete))
+                (sleep-for 0.01)
+                (when (= 0 (mod (round (time-to-seconds (time-since start)))
+                                60))
+                  (with-current-buffer (get-buffer-create elpaca-log-buffer)
+                    (message "--- elpaca log beg buffer ---")
+                    (message "%s" (buffer-string))
+                    (message "--- elpaca log end buffer ---"))
+                  (sleep-for 1)))))
+          (setq elpaca--waiting nil))
         (setq fail-count (alist-get 'failed elpaca--status-counts))
         (setq initial-successes
               (or (alist-get 'finished elpaca--status-counts) 0))
