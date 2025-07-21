@@ -118,11 +118,11 @@
                     (message "--- Nothing left for rebuilding ---")
                     (throw 'no-failures nil)))))))
         (dolist (dep deps)
-          (unless (file-exists-p (file-name-concat repos (cdr dep)))
+          (unless (file-exists-p (concat repos (cdr dep)))
             (message "Missing dependency: %S | %S | %S | %S"
                      (car dep) (elpaca<-statuses (elpaca-get (car dep)))
                      basic-test-elpaca-loaded
-                     (file-name-concat repos (cdr dep))))))
+                     (concat repos (cdr dep))))))
 
       ;; note: check .emacs, compare with lock file behavior
       (let ((pattern (rx line-start (*? whitespace)
