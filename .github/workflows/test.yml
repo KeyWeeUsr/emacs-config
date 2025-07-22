@@ -20,12 +20,14 @@ jobs:
         os:
           - ubuntu-latest
         emacs: [
-          # note(elpaca): Emacs >= 27.1
-          '27.1',
-          '27.2',
-          '28.1',
-          '28.2',
-          # built-in use-package
+          # # note(elpaca): Emacs >= 27.1
+          # note(elisp-lint,begin): indentation issues with #'func
+          # '27.1',
+          # '27.2',
+          # '28.1',
+          # '28.2',
+          # note(elisp-lint,end): indentation issues with #'func
+          # # built-in use-package
           '29.1',
           '29.2',
           '29.3',
