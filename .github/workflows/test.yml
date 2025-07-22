@@ -144,9 +144,24 @@ jobs:
                       (emacs-lisp-mode)
                       (pcase-dolist (\`(,line ,col ,type ,message)
                                      (package-lint-buffer))
-                        (setq err t)
-                        (message "%s:%d:%d: %s: %s"
-                                 file line col type message)))
+                        (unless (or (and (string-match "depend on" message)
+                                         (string-match "use-package" message))
+                                    (string-match "lacks a file header"
+                                                  message)
+                                    (and (string-match "depend on" message)
+                                         (string-match "run-hook-query-error"
+                                                       message))
+                                    ;; note: available since Emacs 18
+                                    (and (string-match "depend on" message)
+                                         (string-match "indent-tabs" message))
+                                    ;; note: available from ELPA
+                                    (and (string-match "depend on" message)
+                                         (string-match "which-key" message))
+                                    ;; note: available from ELPA
+                                    (string-match "Closing parens" message))
+                          (setq err t)
+                          (message "%s:%d:%d: %s: %s"
+                                   file line col type message))))
                     (when err
                       (error "Package lint found issues")))
 

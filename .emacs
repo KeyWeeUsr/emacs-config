@@ -5,6 +5,9 @@
 ;; Author: KeyWeeUsr
 ;; Version: 6.3
 
+;; (elpaca)
+;; Package-Requires: ((emacs "27.1"))
+
 ;; (let)
 ;; Package-Requires: ((emacs "24.4"))
 
