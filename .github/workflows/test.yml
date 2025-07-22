@@ -11,6 +11,168 @@ on:
     paths-ignore: ['**.md']
 
 jobs:
+  lint:
+    needs: prebuild
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+        emacs: [
+          # note(elpaca): Emacs >= 27.1
+          '27.1',
+          '27.2',
+          '28.1',
+          '28.2',
+          # built-in use-package
+          '29.1',
+          '29.2',
+          '29.3',
+          '29.4',
+          '30.1',
+          # 'master'
+        ]
+
+    container:
+      image: keyweeusr/emacs-with-node:${{ matrix.emacs }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache use-package
+        if: |
+          startsWith(matrix.emacs, '28.')
+          || startsWith(matrix.emacs, '27.')
+        id: cache-use-package
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.emacs.d/elpa/bind-key-*
+            ~/.emacs.d/elpa/use-package-*
+          key: >-
+            os-${{ matrix.os }}
+            emacs-${{ matrix.emacs }}
+            use-package
+
+      - name: Pre-install use-package for older versions
+        if: |
+          (startsWith(matrix.emacs, '28.') || startsWith(matrix.emacs, '27.'))
+          && steps.cache-use-package.outputs.cache-hit != 'true'
+        run: |
+          emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn (package-refresh-contents) (package-install 'use-package))
+          EOF
+          )"
+
+      - name: Cache linters
+        id: cache-linters
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.emacs.d/elpa/package-lint-*
+            ~/.emacs.d/elpa/relint-*
+            ~/.emacs.d/elpa/elisp-lint-*
+            ~/.emacs.d/elpa/xr-*
+            ~/.emacs.d/elpa/dash-*
+          key: >-
+            os-${{ matrix.os }}
+            emacs-${{ matrix.emacs }}
+            linters
+
+      - name: Install linters
+        if: steps.cache-linters.outputs.cache-hit != 'true'
+        run: |
+          emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn
+                (package-initialize)
+                (add-to-list
+                 'package-archives
+                 '("stable-melpa" . "https://stable.melpa.org/packages/") t)
+                (package-refresh-contents)
+                (package-install 'package-lint)
+                (package-install 'relint)
+                (package-install 'elisp-lint)
+              )
+          EOF
+          )"
+
+      - name: Lint
+        run: |
+          ls -lah ~/.emacs.d/elpa/
+
+          # todo: Add to .lock file, install with Elpaca
+
+          emacs --batch \
+              --directory . \
+              --eval "$(cat<<EOF
+              (progn
+                (package-initialize)
+                (let ((file ".emacs"))
+                  (advice-add
+                   'checkdoc-error :around
+                   (lambda (original &rest arguments)
+                     (let ((from (with-current-buffer
+                                     (get-buffer checkdoc-diagnostic-buffer)
+                                   (point-max))))
+                       (apply original arguments)
+                       (warn "%s" (with-current-buffer
+                                      (get-buffer checkdoc-diagnostic-buffer)
+                                    (buffer-substring from (point-max)))))))
+                  (with-current-buffer (find-file-noselect file)
+                    (checkdoc-current-buffer t))
+                  (with-current-buffer (get-buffer checkdoc-diagnostic-buffer)
+                    (goto-char (point-min))
+                    (re-search-forward (regexp-quote "***"))
+                    (goto-char (1+ (line-end-position)))
+                    (when (> (- (point-max) (point)) 0)
+                      (error "Checkdoc found issues")))
+                  (let (err)
+                    (require 'package-lint)
+                    (with-temp-buffer
+                      (insert-file-contents file t)
+                      (emacs-lisp-mode)
+                      (pcase-dolist (\`(,line ,col ,type ,message)
+                                     (package-lint-buffer))
+                        (setq err t)
+                        (message "%s:%d:%d: %s: %s"
+                                 file line col type message)))
+                    (when err
+                      (error "Package lint found issues")))
+
+                  (let (err)
+                    (require 'relint)
+                    (advice-add 'relint--output-complaint :around
+                                (lambda (original &rest args)
+                                  (setq err t)
+                                  (ignore-errors (apply original args))))
+                    (relint-file file)
+                    (when err
+                      (error "Relint found issues")))
+                  (let (err)
+                    (advice-add 'elisp-lint--print :override
+                                (lambda (_color format-string &rest arguments)
+                                  (setq err t)
+                                  (message "%s" arguments)))
+                    (require 'elisp-lint)
+                    (elisp-lint-file ".emacs")
+                    (when err
+                      (error "Elisp lint found issues")))
+                  )
+              )
+          EOF
+          )"
+
   compile:
     needs: prebuild
     runs-on: ${{ matrix.os }}
