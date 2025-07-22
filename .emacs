@@ -30,11 +30,13 @@
 
 ;; note(elpaca-install,begin): whole installer, including bootstrap and early
 (defun my-init-early-init (&optional attempts-left)
+  "Create early-init.el and attempt to restarting or unload features.
+Optional argument ATTEMPTS-LEFT limits the recursion."
   (if attempts-left
       (message "Restart attempts left: %s" attempts-left)
     (setq attempts-left 3))
   (when (<= attempts-left 0)
-    (error "https://www.youtube.com/watch?v=OCsMKypvmB0"))
+    (error "Https://www.youtube.com/watch?v=OCsMKypvmB0"))
 
   (let ((path (expand-file-name "early-init.el" user-emacs-directory)))
     (unless (file-exists-p path)
@@ -182,6 +184,9 @@
 ;; constants, etc
 (defvar my-epa-file-encrypt-to "")
 (defmacro my-call-if-defined (func &rest args)
+  "Call FUNC with ARGS if present, or report an error.
+This is to make byte-compilation false-positive warnings silent for non-provide
+loaded symbols such as the ones from window.el."
   `(if (fboundp ',func)
        (,func ,@args)
      (error "%s is not defined" ',func)))
@@ -241,12 +246,30 @@
                (cadr (split-string left-top "," nil)))))
     (modify-frame-parameters (window-frame)
                              `((left . ,left) (top . ,top)))))
-(defun my-move-left () (interactive) (my-move "-2000,0"))
-(defun my-move-right () (interactive) (my-move "2000,0"))
-(defun my-move-top () (interactive) (my-move "0,1000"))
-(defun my-move-bottom () (interactive) (my-move "0,-1000"))
-(defun my-move-middle () (interactive) (my-move "-2000,0"))
-(defun my-move-center () (interactive) (my-move "-2000,0"))
+(defun my-move-left ()
+  "Move Emacs window to the left monitor."
+  (interactive)
+  (my-move "-2000,0"))
+(defun my-move-right ()
+  "Move Emacs window to the right monitor."
+  (interactive)
+  (my-move "2000,0"))
+(defun my-move-top ()
+  "Move Emacs window to the top monitor."
+  (interactive)
+  (my-move "0,1000"))
+(defun my-move-bottom ()
+  "Move Emacs window to the bottom monitor."
+  (interactive)
+  (my-move "0,-1000"))
+(defun my-move-middle ()
+  "Move Emacs window to the middle monitor."
+  (interactive)
+  (my-move "0,0"))
+(defun my-move-center ()
+  "Move Emacs window to the middle monitor."
+  (interactive)
+  (my-move "0,0"))
 
 ;; note(macos,begin): fixes & patching around
 (progn
@@ -321,7 +344,9 @@
 
 (defun my-cache-gpg-progress
     (context operation display-chr current total data)
-  "From epg-context-set-progress-callback."
+  "From epg-context-set-progress-callback.
+The Callback signature needs CONTEXT, OPERATION, DISPLAY-CHR, CURRENT, TOTAL
+and DATA."
   (ignore context operation display-chr data)
   (when (= current total)
     (run-at-time
@@ -331,6 +356,7 @@
              (message "Clipboard cleared")))))
 
 (defun my-string-or (what default)
+  "Handle optional WHAT string or return DEFAULT."
   (if (string= "" what) default what))
 
 (defvar my-imgur-client-id)
@@ -665,10 +691,10 @@
             ;; todo(undefined,declare-shadow): has source, ignored require
             (term-char-mode)))))))
 
-(defun windows-to-buffers(wins)
-  "Pull buffer refs from all windows in a frame."
+(defun windows-to-buffers(windows)
+  "Pull buffer refs from all WINDOWS in a frame."
   (let ((result ()))
-    (dolist (item wins 'result)
+    (dolist (item windows 'result)
       (push (window-buffer item) result))
     (nreverse result)))
 
@@ -1238,8 +1264,8 @@
   :config (global-so-long-mode))
 
 
-;; note(vlang): something crashed in the upstream on buffer save
-(defun v-build-tags())
+(defun v-build-tags()
+  "Note(vlang): something crashed in the upstream on buffer save.")
 
 (declare-function patch-org-insert-structure-template ".emacs")
 (declare-function patch-org-tempo-complete-tag ".emacs")
@@ -1302,8 +1328,8 @@
 (progn
 ;; assumptions: C-x 2|3 = (split-window-below|right)
 ;; hence: lowest ID = top-left, highest = bot-right
-(defun window-id(win)
-  "Return numeric window ID."
+(defun window-id(window)
+  "Return numeric WINDOW ID."
   (let ((win-name (format "%s" win))
         (pattern "^#<window \\([0-9]+\\)"))
     (string-match pattern win-name)
@@ -1328,7 +1354,7 @@
 ;; note(window,begin): rotation
 (progn
 (defun rotate-windows(orientation)
-  "Rotate windows layout horizontally/vertically."
+  "Rotate windows layout by ORIENTATION (h)orizontally or (v)ertically."
   (let ((current-buff (buffer-name (current-buffer))))
     (go-to-first-window)
     (let ((buffs (windows-to-buffers (window-list))))
@@ -1438,7 +1464,7 @@
 
 ;; Stop the `list-processes' SIGKILL insanity
 (defun terminate-process (proc)
-  "Same as for `delete-process' + PID."
+  "Same as for `delete-process' for PROC + PID."
   (let ((sig 15))
     (message "Signal %s to %s" sig proc)
     (signal-process proc sig)))
