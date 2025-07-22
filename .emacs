@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 6.3
+;; Version: 6.4
 
 ;; (elpaca)
 ;; Package-Requires: ((emacs "27.1"))
@@ -132,7 +132,8 @@ Optional argument ATTEMPTS-LEFT limits the recursion."
                            "(byte-recompile-directory \".\" 0 'force)")))
                   ((require 'elpaca))
                   ((with-no-warnings
-                     ;; note(circular): compile requires elpaca, elpaca needs to bootstrap
+                     ;; note(circular): compile requires elpaca
+                     ;;                 elpaca needs to bootstrap
                      (elpaca-generate-autoloads "elpaca" repo))))
             (progn (message "%s" (buffer-string)) (kill-buffer buffer))
           (error "%s" (with-current-buffer buffer (buffer-string))))
@@ -181,8 +182,7 @@ Optional argument ATTEMPTS-LEFT limits the recursion."
 ;; Enable use-package :ensure support for Elpaca.
 (with-no-warnings
   ;; note(free-var): unquoted symbol of an extension in a macro false-positive
-  (elpaca elpaca-use-package
-    (elpaca-use-package-mode)))
+  (elpaca elpaca-use-package (elpaca-use-package-mode)))
 
 ;; constants, etc
 (defvar my-epa-file-encrypt-to "")
@@ -210,8 +210,20 @@ loaded symbols such as the ones from window.el."
  '(indent-tabs-mode nil)
  '(indicate-empty-lines t)
  '(ispell-dictionary nil)
+ ;; note(elisp-lint,ignore,begin): indent
  '(package-selected-packages
-   '(company elfeed-tube elfeed mermaid-mode org-roam langdoc ace-window ascii-art-to-unicode auto-complete brainfuck-mode cmake-mode company-quickhelp curl-to-elisp cython-mode dbml-mode decor dedicated define-it digit-groups diminish dired-duplicates docker-compose-mode dockerfile-mode ecukes elfeed-org elfeed-tube-mpv ess exec-path-from-shell gnu-elpa-keyring-update go-mode gradle-mode graphviz-dot-mode groovy-mode helpful htmlize httprepl keepass-mode kivy-mode kotlin-mode markdown-mode mermaid-docker-mode multi-term ob-base64 org-epa-gpg org-roam-timestamps org-roam-ui org-transclusion org-web-tools osm package-lint php-mode ssh-config-mode terraform-mode typewriter-roll-mode undercover use-package v-mode wc-mode which-key yaml-mode))
+   '(company elfeed-tube elfeed mermaid-mode org-roam langdoc ace-window
+     ascii-art-to-unicode auto-complete brainfuck-mode cmake-mode
+     company-quickhelp curl-to-elisp cython-mode dbml-mode decor dedicated
+     define-it digit-groups diminish dired-duplicates docker-compose-mode
+     dockerfile-mode ecukes elfeed-org elfeed-tube-mpv ess exec-path-from-shell
+     gnu-elpa-keyring-update go-mode gradle-mode graphviz-dot-mode groovy-mode
+     helpful htmlize httprepl keepass-mode kivy-mode kotlin-mode markdown-mode
+     mermaid-docker-mode multi-term ob-base64 org-epa-gpg org-roam-timestamps
+     org-roam-ui org-transclusion org-web-tools osm package-lint php-mode
+     ssh-config-mode terraform-mode typewriter-roll-mode undercover use-package
+     v-mode wc-mode which-key yaml-mode))
+ ;; note(elisp-lint,ignore,end): indent
  '(ring-bell-function 'ignore)
  '(scroll-bar-mode nil)
  '(show-paren-mode t nil (paren))
@@ -227,8 +239,10 @@ loaded symbols such as the ones from window.el."
  ;; If there is more than one, they won't work right.
  '(minibuffer-prompt ((t (:foreground "#e5786d" :height 0.9))))
  '(mode-line ((t (:background "#444444" :foreground "#f6f3e8" :height 0.6))))
- '(mode-line-inactive ((t (:background "#444444" :foreground "#857b6f" :height 0.6))))
- '(term-color-blue ((t (:background "deep sky blue" :foreground "deep sky blue"))))
+ '(mode-line-inactive
+   ((t (:background "#444444" :foreground "#857b6f" :height 0.6))))
+ '(term-color-blue
+   ((t (:background "deep sky blue" :foreground "deep sky blue"))))
  '(trailing-whitespace ((t (:background "red1")))))
 (put 'upcase-region 'disabled nil)
 (put 'list-timers 'disabled nil)
@@ -276,31 +290,30 @@ loaded symbols such as the ones from window.el."
 
 ;; note(macos,begin): fixes & patching around
 (progn
-;; Fixes for MacOS
-(when (eq window-system 'ns)
-  (with-no-warnings
-    (setq ns-right-alternative-modifier 'none)
-    (setq mac-right-option-modifier 'none)
-    (setq ns-command-modifier 'meta)
-    (setq mac-command-modifier 'meta))
-  (advice-add 'ns-print-buffer :override (lambda (&rest _))
-              '((name . "mac-keyboard")))
-  (setq exec-path (append '("/opt/homebrew/bin") exec-path)))
+  ;; Fixes for MacOS
+  (when (eq window-system 'ns)
+    (with-no-warnings
+      (setq ns-right-alternative-modifier 'none)
+      (setq mac-right-option-modifier 'none)
+      (setq ns-command-modifier 'meta)
+      (setq mac-command-modifier 'meta))
+    (advice-add 'ns-print-buffer :override (lambda (&rest _))
+                '((name . "mac-keyboard")))
+    (setq exec-path (append '("/opt/homebrew/bin") exec-path)))
 
-(use-package tool-bar
-  :ensure nil
-  :init
-  (defun my-fix-mac ()
-    "Fix Emacs breaking on MacOS."
-    (interactive)
-    (eval-when-compile
-      (require 'tool-bar)
-      (when (eq window-system 'ns)
-        (tool-bar-mode -1)
-        (setq frame-resize-pixelwise t)
-        (dotimes (_ 3)
-          (toggle-frame-maximized))))))
-)
+  (use-package tool-bar
+    :ensure nil
+    :init
+    (defun my-fix-mac ()
+      "Fix Emacs breaking on MacOS."
+      (interactive)
+      (eval-when-compile
+        (require 'tool-bar)
+        (when (eq window-system 'ns)
+          (tool-bar-mode -1)
+          (setq frame-resize-pixelwise t)
+          (dotimes (_ 3)
+            (toggle-frame-maximized)))))))
 ;; note(macos,end): fixes & patching around
 
 (defun custom-exit ()
@@ -342,147 +355,146 @@ loaded symbols such as the ones from window.el."
 
 ;; note(keepass,begin): KeePass config
 (progn
-(declare-function my-cache-gpg-key ".emacs")
-(defvar my-cache-gpg-key-timer)
+  (declare-function my-cache-gpg-key ".emacs")
+  (defvar my-cache-gpg-key-timer)
 
-(defun my-cache-gpg-progress
-    (context operation display-chr current total data)
-  "From epg-context-set-progress-callback.
+  (defun my-cache-gpg-progress
+      (context operation display-chr current total data)
+    "From `epg-context-set-progress-callback'.
 The Callback signature needs CONTEXT, OPERATION, DISPLAY-CHR, CURRENT, TOTAL
 and DATA."
-  (ignore context operation display-chr data)
-  (when (= current total)
-    (run-at-time
-     2 nil (lambda (&rest _)
-             (setq kill-ring (cdr kill-ring))
-             (when (display-graphic-p) (gui-select-text "ok"))
-             (message "Clipboard cleared")))))
+    (ignore context operation display-chr data)
+    (when (= current total)
+      (run-at-time
+       2 nil (lambda (&rest _)
+               (setq kill-ring (cdr kill-ring))
+               (when (display-graphic-p) (gui-select-text "ok"))
+               (message "Clipboard cleared")))))
 
-(defun my-string-or (what default)
-  "Handle optional WHAT string or return DEFAULT."
-  (if (string= "" what) default what))
+  (defun my-string-or (what default)
+    "Handle optional WHAT string or return DEFAULT."
+    (if (string= "" what) default what))
 
-(defvar my-imgur-client-id)
-(defvar my-imgur-client-secret)
-(defvar my-org-roam-directory)
-(defvar my-org-roam-templates)
-(defvar my-epa-file-encrypt-to)
-(defvar my-gpg-id)
+  (defvar my-imgur-client-id)
+  (defvar my-imgur-client-secret)
+  (defvar my-org-roam-directory)
+  (defvar my-org-roam-templates)
+  (defvar my-epa-file-encrypt-to)
+  (defvar my-gpg-id)
 
-(declare-function cred ".emacs")
-(use-package epg
-  :ensure nil
-  :init
-  (progn
-    (defun my-cache-gpg-key (&optional keep ctx)
-      (interactive)
-      (eval-when-compile (require 'epg))
-      (unless ctx (setq ctx (epg-make-context)))
-      (setf (epg-context-pinentry-mode ctx) 'loopback)
+  (declare-function cred ".emacs")
+  (use-package epg
+    :ensure nil
+    :init
+    (progn
+      (defun my-cache-gpg-key (&optional keep ctx)
+        (interactive)
+        (eval-when-compile (require 'epg))
+        (unless ctx (setq ctx (epg-make-context)))
+        (setf (epg-context-pinentry-mode ctx) 'loopback)
 
-      (if (with-no-warnings
-            ;; todo(undefined,declare-shadow): has source, ignored require
-            (epg-sign-string ctx "\n"))
-          (message "Pre-loaded GPG key")
-        (warn "Pre-loading GPG key failed"))
+        (if (with-no-warnings
+              ;; todo(undefined,declare-shadow): has source, ignored require
+              (epg-sign-string ctx "\n"))
+            (message "Pre-loaded GPG key")
+          (warn "Pre-loading GPG key failed"))
 
-      (when keep (setq my-cache-gpg-key-timer
-                       (run-with-timer 1 290 #'my-cache-gpg-key))))
-    (defun my-cache-gpg-key-cancel ()
-      (interactive)
-      (cancel-function-timers #'my-cache-gpg-key))
-    (defun my-keepass-init ()
-      (interactive)
-      (eval-when-compile (require 'epg))
-      (cancel-function-timers #'my-cache-gpg-key)
-      (setq my-cache-gpg-key-timer nil)
-      (let* ((user (user-real-login-name))
-             (db-path (read-file-name-default "KeePass DB: " nil ""))
-	         (keepass-mode-db (unless (string= "" db-path)
-                                (expand-file-name db-path)))
-	         (keepass-mode-password
-              (when keepass-mode-db (read-passwd "KeePass password: ")))
-             (const-username "UserName")
-             (const-password "Password")
-             (const-notes "Notes"))
-        (ignore keepass-mode-password)
-        (fset 'cred `(lambda (what type)
-                       (keepass-mode-get
-                        type (format "emacs-creds/%s-%s" what ,user))))
-        (require 'subr-x)
-        (with-no-warnings
-          ;; note(free-var,defvar-shadow): syncthing before needed
-          (setq syncthing-default-server-token
-                (when keepass-mode-db
-                  (cred "syncthing-token" const-password))))
-        (setq my-imgur-client-id
-              (when keepass-mode-db (cred "imgur-api" const-username)))
-        (setq my-imgur-client-secret
-              (when keepass-mode-db (cred "imgur-api" const-password)))
-        ;; Only unless found set to default, otherwise nil
-        (with-no-warnings
-          ;; note(free-var,defvar-shadow): elfeed before needed
-          (setq elfeed-db-directory
-                (when keepass-mode-db
-                  (my-string-or
-                   (cred "elfeed-db-dir" const-username) "~/elfeed"))))
-        ;; Only unless found set to default, otherwise nil
-        (setq my-org-roam-directory
-              (with-no-warnings
-                ;; note(free-var,defvar-shadow): keepass-mode before needed
-                (when keepass-mode-db
-                  (my-string-or (cred "org-roam-dir" const-username)
-                                (expand-file-name
-                                 "roam" user-emacs-directory)))))
-        (setq my-org-roam-templates
-              (with-no-warnings
-                ;; note(free-var,defvar-shadow): keepass-mode before needed
-                (when keepass-mode-db
-                  (mapcar (lambda (item) (split-string item ";"))
-                          (split-string
-                           (cred "org-roam-templates" const-notes) ";;")))))
-        (setq my-epa-file-encrypt-to
-              (when keepass-mode-db
-                (cred "epa-file-encrypt-to" const-username)))
-        (setq my-gpg-id (when keepass-mode-db (cred "gpg-main" const-notes)))
-        (let ((tmp nil) (epg-user-id my-gpg-id) (ctx (epg-make-context))
-              (select-enable-clipboard t) (select-enable-primary t))
+        (when keep (setq my-cache-gpg-key-timer
+                         (run-with-timer 1 290 #'my-cache-gpg-key))))
+      (defun my-cache-gpg-key-cancel ()
+        (interactive)
+        (cancel-function-timers #'my-cache-gpg-key))
+      (defun my-keepass-init ()
+        (interactive)
+        (eval-when-compile (require 'epg))
+        (cancel-function-timers #'my-cache-gpg-key)
+        (setq my-cache-gpg-key-timer nil)
+        (let* ((user (user-real-login-name))
+               (db-path (read-file-name-default "KeePass DB: " nil ""))
+               (keepass-mode-db (unless (string= "" db-path)
+                                  (expand-file-name db-path)))
+               (keepass-mode-password
+                (when keepass-mode-db (read-passwd "KeePass password: ")))
+               (const-username "UserName")
+               (const-password "Password")
+               (const-notes "Notes"))
+          (ignore keepass-mode-password)
+          (fset 'cred `(lambda (what type)
+                         (keepass-mode-get
+                          type (format "emacs-creds/%s-%s" what ,user))))
+          (require 'subr-x)
           (with-no-warnings
-            ;; todo(undefined,declare-shadow): has source, ignored require
-            (epg-context-set-progress-callback ctx #'my-cache-gpg-progress))
-          (unwind-protect
-              (when keepass-mode-db
-                (setq tmp (cred "gpg-main" const-password))
-                ;; trim kill-ring
-                (setq kill-ring
-                      (butlast kill-ring
-                               (- (length kill-ring) (1- kill-ring-max))))
-                ;; cleared in progress func
-                (kill-new tmp)
-                (when (display-graphic-p)
-                  (gui-select-text tmp))
-                (condition-case err (my-cache-gpg-key t ctx)
-                  (t (warn "Pre-loading GPG key failed (%s)" err))))
-            (setq tmp nil)))
-        (makunbound 'cred))
-      (when (or (not (boundp 'my-gpg-id)) (null my-gpg-id))
-        (warn "KeePass init failed")))))
+            ;; note(free-var,defvar-shadow): syncthing before needed
+            (setq syncthing-default-server-token
+                  (when keepass-mode-db
+                    (cred "syncthing-token" const-password))))
+          (setq my-imgur-client-id
+                (when keepass-mode-db (cred "imgur-api" const-username)))
+          (setq my-imgur-client-secret
+                (when keepass-mode-db (cred "imgur-api" const-password)))
+          ;; Only unless found set to default, otherwise nil
+          (with-no-warnings
+            ;; note(free-var,defvar-shadow): elfeed before needed
+            (setq elfeed-db-directory
+                  (when keepass-mode-db
+                    (my-string-or
+                     (cred "elfeed-db-dir" const-username) "~/elfeed"))))
+          ;; Only unless found set to default, otherwise nil
+          (setq my-org-roam-directory
+                (with-no-warnings
+                  ;; note(free-var,defvar-shadow): keepass-mode before needed
+                  (when keepass-mode-db
+                    (my-string-or (cred "org-roam-dir" const-username)
+                                  (expand-file-name
+                                   "roam" user-emacs-directory)))))
+          (setq my-org-roam-templates
+                (with-no-warnings
+                  ;; note(free-var,defvar-shadow): keepass-mode before needed
+                  (when keepass-mode-db
+                    (mapcar (lambda (item) (split-string item ";"))
+                            (split-string
+                             (cred "org-roam-templates" const-notes) ";;")))))
+          (setq my-epa-file-encrypt-to
+                (when keepass-mode-db
+                  (cred "epa-file-encrypt-to" const-username)))
+          (setq my-gpg-id (when keepass-mode-db (cred "gpg-main" const-notes)))
+          (let ((tmp nil) (epg-user-id my-gpg-id) (ctx (epg-make-context))
+                (select-enable-clipboard t) (select-enable-primary t))
+            (with-no-warnings
+              ;; todo(undefined,declare-shadow): has source, ignored require
+              (epg-context-set-progress-callback ctx #'my-cache-gpg-progress))
+            (unwind-protect
+                (when keepass-mode-db
+                  (setq tmp (cred "gpg-main" const-password))
+                  ;; trim kill-ring
+                  (setq kill-ring
+                        (butlast kill-ring
+                                 (- (length kill-ring) (1- kill-ring-max))))
+                  ;; cleared in progress func
+                  (kill-new tmp)
+                  (when (display-graphic-p)
+                    (gui-select-text tmp))
+                  (condition-case err (my-cache-gpg-key t ctx)
+                    (t (warn "Pre-loading GPG key failed (%s)" err))))
+              (setq tmp nil)))
+          (makunbound 'cred))
+        (when (or (not (boundp 'my-gpg-id)) (null my-gpg-id))
+          (warn "KeePass init failed")))))
 
-(use-package keepass-mode
-  :ensure (:depth 1)
-  :after epg
-  :config
-  (if (not (eq window-system 'android))
-      (add-hook 'elpaca-after-init-hook #'my-keepass-init)
-    (let ((vars '(elfeed-db-directory
-                  syncthing-default-server-token)))
-      (dolist (var vars)
-        (let* ((tmpl "Setting var '%s' [%S] ")
-               (current (when (boundp var) (symbol-value var)))
-               (new (read-string (format tmpl var current))))
-          (unless (string= new "")
-            (setf (symbol-value var) new)))))))
-)
+  (use-package keepass-mode
+    :ensure (:depth 1)
+    :after epg
+    :config
+    (if (not (eq window-system 'android))
+        (add-hook 'elpaca-after-init-hook #'my-keepass-init)
+      (let ((vars '(elfeed-db-directory
+                    syncthing-default-server-token)))
+        (dolist (var vars)
+          (let* ((tmpl "Setting var '%s' [%S] ")
+                 (current (when (boundp var) (symbol-value var)))
+                 (new (read-string (format tmpl var current))))
+            (unless (string= new "")
+              (setf (symbol-value var) new))))))))
 ;; note(keepass,end): KeePass config
 
 (use-package auth-source
@@ -813,180 +825,182 @@ and DATA."
 
 ;; note(org-roam,begin): zettelkasten
 (progn
-(declare-function my-set-org-roam-directory ".emacs")
-(declare-function my-org-roam-node-find ".emacs")
-(use-package org-roam
-  :ensure (:depth 1)
-  :after (keepass-mode org)
-  :config
-  (progn
-    ;; (setq org-roam-database-connector 'libsqlite3)
-    (let ((my-org-roam-filename "%<%Y%m%d%H%M%S>-${id}.org.gpg")
-          (my-org-roam-heading
-           (format "-*- epa-file-encrypt-to: (%S); fill-column: 50 -*-"
-                   my-epa-file-encrypt-to))
-          (my-org-roam-template-prefix
-           '("#+templateversion: 0" "#+filetags: untagged"
-             "#+title: ${title}" "#+startup: fold")))
-      (setq org-roam-db-autosync-mode nil)
-      (setq org-roam-capture-templates
-            `(("d" "default" plain
-               ,(string-join `(,@my-org-roam-template-prefix "\n%?") "\n")
-               :target
-               (file+head ,my-org-roam-filename ,my-org-roam-heading)
-               :unnarrowed t)
-              ("b" "book notes" plain
-               ,(string-join
-                 `(,@my-org-roam-template-prefix
-                   "" "* Source" "%^{Author}" "Title: ${title}"
-                   "Year: %^{Year}" "* Summary" "%?") "\n")
-               :target
-               (file+head ,my-org-roam-filename ,my-org-roam-heading)
-               :unnarrowed t)
-              ("v" "video notes" plain
-               ,(string-join
-                 `(,@my-org-roam-template-prefix
-                   "" "* Source" "%^{URL}" "Title: %^{Title}" "Year: %^{Year}"
-                   "* Summary" "%?") "\n")
-               :target
-               (file+head ,my-org-roam-filename ,my-org-roam-heading)
-               :unnarrowed t)))
-      (my-set-org-roam-directory)))
-  :init
-  (progn
-    (defun my-set-org-roam-directory ()
-      "Set `org-roam-directory'."
-      (interactive)
-      (eval-when-compile (require 'org-roam))
-      (setq org-roam-directory my-org-roam-directory))
-    (defun my-org-roam-node-find (&rest _)
-      "Ask for Roam title prefix so it's consistent a bit."
-      (interactive)
-      (eval-when-compile (require 'org-roam))
-      (if (not current-prefix-arg)
-          (org-roam-node-find nil "")
-        (let ((title "Choose my prefix")
-              (tab (propertize " " 'display '(space :align-to 8)))
-              tpl-map option buf-name initial-input)
-          (save-window-excursion
-            (save-mark-and-excursion
-              (save-restriction
-                (setq buf-name (make-temp-name (format "*%s*" title)))
-                (switch-to-buffer-other-window buf-name)
-                (insert (format "%s\n\n" title))
+  (declare-function my-set-org-roam-directory ".emacs")
+  (declare-function my-org-roam-node-find ".emacs")
+  (use-package org-roam
+    :ensure (:depth 1)
+    :after (keepass-mode org)
+    :config
+    (progn
+      ;; (setq org-roam-database-connector 'libsqlite3)
+      (let ((my-org-roam-filename "%<%Y%m%d%H%M%S>-${id}.org.gpg")
+            (my-org-roam-heading
+             (format "-*- epa-file-encrypt-to: (%S); fill-column: 50 -*-"
+                     my-epa-file-encrypt-to))
+            (my-org-roam-template-prefix
+             '("#+templateversion: 0" "#+filetags: untagged"
+               "#+title: ${title}" "#+startup: fold")))
+        (setq org-roam-db-autosync-mode nil)
+        (setq org-roam-capture-templates
+              `(("d" "default" plain
+                 ,(string-join `(,@my-org-roam-template-prefix "\n%?") "\n")
+                 :target
+                 (file+head ,my-org-roam-filename ,my-org-roam-heading)
+                 :unnarrowed t)
+                ("b" "book notes" plain
+                 ,(string-join
+                   `(,@my-org-roam-template-prefix
+                     "" "* Source" "%^{Author}" "Title: ${title}"
+                     "Year: %^{Year}" "* Summary" "%?") "\n")
+                 :target
+                 (file+head ,my-org-roam-filename ,my-org-roam-heading)
+                 :unnarrowed t)
+                ("v" "video notes" plain
+                 ,(string-join
+                   `(,@my-org-roam-template-prefix
+                     "" "* Source" "%^{URL}" "Title: %^{Title}"
+                     "Year: %^{Year}" "* Summary" "%?")
+                   "\n")
+                 :target
+                 (file+head ,my-org-roam-filename ,my-org-roam-heading)
+                 :unnarrowed t)))
+        (my-set-org-roam-directory)))
+    :init
+    (progn
+      (defun my-set-org-roam-directory ()
+        "Set `org-roam-directory'."
+        (interactive)
+        (eval-when-compile (require 'org-roam))
+        (setq org-roam-directory my-org-roam-directory))
+      (defun my-org-roam-node-find (&rest _)
+        "Ask for Roam title prefix so it's consistent a bit."
+        (interactive)
+        (eval-when-compile (require 'org-roam))
+        (if (not current-prefix-arg)
+            (org-roam-node-find nil "")
+          (let ((title "Choose my prefix")
+                (tab (propertize " " 'display '(space :align-to 8)))
+                tpl-map option buf-name initial-input)
+            (save-window-excursion
+              (save-mark-and-excursion
+                (save-restriction
+                  (setq buf-name (make-temp-name (format "*%s*" title)))
+                  (switch-to-buffer-other-window buf-name)
+                  (insert (format "%s\n\n" title))
 
-                (dolist (item my-org-roam-templates)
-                  (setf (alist-get (intern `,(car item)) tpl-map) (cdr item))
-                  (insert (concat (format "[%s]" (car item))
-                                  tab (cadr item) "\n")))
+                  (dolist (item my-org-roam-templates)
+                    (setf (alist-get (intern `,(car item)) tpl-map) (cdr item))
+                    (insert (concat (format "[%s]" (car item))
+                                    tab (cadr item) "\n")))
 
-                (dotimes (_ (window-max-chars-per-line)) (insert "-"))
+                  (dotimes (_ (window-max-chars-per-line)) (insert "-"))
 
-                (dolist (item '(("C" "Customize my-templates") ("q" "Abort")))
-                  (setf (alist-get (intern `,(car item)) tpl-map) (cdr item))
-                  (insert (concat (format "[%s]" (car item))
-                                  tab (cadr item) "\n")))
+                  (dolist (item '(("C" "Customize my-templates")
+                                  ("q" "Abort")))
+                    (setf (alist-get (intern `,(car item)) tpl-map) (cdr item))
+                    (insert (concat (format "[%s]" (car item))
+                                    tab (cadr item) "\n")))
 
-                (setq option (char-to-string (read-char "Prefix: ")))
-                (kill-buffer buf-name)
+                  (setq option (char-to-string (read-char "Prefix: ")))
+                  (kill-buffer buf-name)
 
-                (setq initial-input
-                      (cond ((string= option "C")
-                             (user-error "No way to customize yet"))
-                            ((string= option "q")
-                             (message "Aborted")
-                             "")
-                            (t (setq option
-                                     (alist-get (intern `,option) tpl-map))
-                               (cadr option)))))))
-          (org-roam-node-find nil initial-input))))
-    (defun org-roam-ext-find-by-tag (tag)
-      (interactive "sTag: ")
-      (let (opt-chars query selected options)
-        (setq opt-chars
-              ;; (number-sequence 1 5) -> [1] .. [5]
-              ;; (string 48) .. (string 57)
-              ;; (string 65) .. (string 90)
-              ;; (string 97) .. (string 122)
-              (mapcar (lambda (num) (string num))
-                      ;; note: 0-9 + A-Z + a-z
-                      (append (number-sequence 48 57)
-                              (number-sequence 65 90)
-                              (number-sequence 97 122))))
-        (setq query (format
-                     "SELECT %s FROM %s %s WHERE tag like '%%%%%s%%%%'"
-                     (string-join '("title" "file" "pos" "properties") ",")
-                     "tags" "LEFT JOIN nodes n ON (n.id = node_id)" tag))
-        (setq selected (org-roam-db-query query))
+                  (setq initial-input
+                        (cond ((string= option "C")
+                               (user-error "No way to customize yet"))
+                              ((string= option "q")
+                               (message "Aborted")
+                               "")
+                              (t (setq option
+                                       (alist-get (intern `,option) tpl-map))
+                                 (cadr option)))))))
+            (org-roam-node-find nil initial-input))))
+      (defun org-roam-ext-find-by-tag (tag)
+        (interactive "sTag: ")
+        (let (opt-chars query selected options)
+          (setq opt-chars
+                ;; (number-sequence 1 5) -> [1] .. [5]
+                ;; (string 48) .. (string 57)
+                ;; (string 65) .. (string 90)
+                ;; (string 97) .. (string 122)
+                (mapcar (lambda (num) (string num))
+                        ;; note: 0-9 + A-Z + a-z
+                        (append (number-sequence 48 57)
+                                (number-sequence 65 90)
+                                (number-sequence 97 122))))
+          (setq query (format
+                       "SELECT %s FROM %s %s WHERE tag like '%%%%%s%%%%'"
+                       (string-join '("title" "file" "pos" "properties") ",")
+                       "tags" "LEFT JOIN nodes n ON (n.id = node_id)" tag))
+          (setq selected (org-roam-db-query query))
 
-        (unless selected
-          (error "No results from org-roam DB.  Are notes loaded?"))
+          (unless selected
+            (error "No results from org-roam DB.  Are notes loaded?"))
 
-        (dolist (item selected)
-          (let (new)
-            (setf (alist-get 'char new) (pop opt-chars)) ; unhandled out of chars
-            (setf (alist-get 'title new) (car item))
-            (setf (alist-get 'file new) (car (cdr item)))
-            (setf (alist-get 'pos new) (car (cdr (cdr item))))
-            (setf (alist-get 'tags new)
-                  (let ((all (car (cdr (cdr (cdr item))))) result)
-                    (dolist (single all)
-                      (when (string= "ALLTAGS" (car single))
-                        (setq result
-                              (remove "" (split-string (cdr single) ":")))))
-                    result))
-            (push new options)))
-        (let (msg tmp)
-          (dolist (opt (reverse options))
-            (setq tmp (format "(%s) %s (%s)"
-                              (alist-get 'char opt)
-                              (alist-get 'title opt)
-                              (string-join (alist-get 'tags opt) ", ")))
-            (setq msg (if msg (format "%s\n%s" msg tmp) tmp)))
-          (message msg))
-        (let ((key (read-key)) result file-path)
-          (dolist (opt options)
-            (when (string= (string key) (alist-get 'char opt))
-              (setq result opt)))
-          (setq file-path (alist-get 'file result))
-          (when file-path
-            (find-file file-path)
-            (goto-char (alist-get 'pos result))))))
-    (defun my-org-roam-stop-and-clear ()
-      "Stop Org Roam and clear everything unnecessary."
-      (require 'org-roam-db)
-      (org-roam-db-autosync-mode -1)
+          (dolist (item selected)
+            (let (new)
+              ;; unhandled out of chars
+              (setf (alist-get 'char new) (pop opt-chars))
+              (setf (alist-get 'title new) (car item))
+              (setf (alist-get 'file new) (car (cdr item)))
+              (setf (alist-get 'pos new) (car (cdr (cdr item))))
+              (setf (alist-get 'tags new)
+                    (let ((all (car (cdr (cdr (cdr item))))) result)
+                      (dolist (single all)
+                        (when (string= "ALLTAGS" (car single))
+                          (setq result
+                                (remove "" (split-string (cdr single) ":")))))
+                      result))
+              (push new options)))
+          (let (msg tmp)
+            (dolist (opt (reverse options))
+              (setq tmp (format "(%s) %s (%s)"
+                                (alist-get 'char opt)
+                                (alist-get 'title opt)
+                                (string-join (alist-get 'tags opt) ", ")))
+              (setq msg (if msg (format "%s\n%s" msg tmp) tmp)))
+            (message msg))
+          (let ((key (read-key)) result file-path)
+            (dolist (opt options)
+              (when (string= (string key) (alist-get 'char opt))
+                (setq result opt)))
+            (setq file-path (alist-get 'file result))
+            (when file-path
+              (find-file file-path)
+              (goto-char (alist-get 'pos result))))))
+      (defun my-org-roam-stop-and-clear ()
+        "Stop Org Roam and clear everything unnecessary."
+        (require 'org-roam-db)
+        (org-roam-db-autosync-mode -1)
 
-      ;; clear the DB and Emacs cached entries
-      (org-roam-db-clear-all)
-      (when (boundp 'org-roam-db-location)
-        (delete-file org-roam-db-location)
-        (if (file-exists-p org-roam-db-location)
-            (message "Failed to delete org-roam DB, delete manually!")
-          (message "Successfully deleted org-roam DB"))
-        (sleep-for 0.1)))
-    (defun my-notes()
-      "Start org-roam DB sync / load zettelkasten."
-      (interactive)
-      (my-org-roam-stop-and-clear)
-      (my-set-org-roam-directory)
-      (my-org-roam-start))
-    (defun my-org-roam-start ()
-      (when (boundp 'org-roam-directory)
-        (unless (file-exists-p org-roam-directory)
-          (make-directory org-roam-directory)))
-      (org-roam-db-autosync-mode)))
-  :bind (("C-c n f" . my-org-roam-node-find)
-         ("C-c n r" . org-roam-node-random)
-         ("C-c n z" . org-roam-ext-find-by-tag)
-         ("C-c n #" . org-roam-ext-find-by-tag)
-         (:map org-mode-map
-               (("C-c n i" . org-roam-node-insert)
-                ("C-c n o" . org-id-get-create)
-                ("C-c n t" . org-roam-tag-add)
-                ("C-c n a" . org-roam-alias-add)
-                ("C-c n l" . org-roam-buffer-toggle)))))
-)
+        ;; clear the DB and Emacs cached entries
+        (org-roam-db-clear-all)
+        (when (boundp 'org-roam-db-location)
+          (delete-file org-roam-db-location)
+          (if (file-exists-p org-roam-db-location)
+              (message "Failed to delete org-roam DB, delete manually!")
+            (message "Successfully deleted org-roam DB"))
+          (sleep-for 0.1)))
+      (defun my-notes()
+        "Start org-roam DB sync / load zettelkasten."
+        (interactive)
+        (my-org-roam-stop-and-clear)
+        (my-set-org-roam-directory)
+        (my-org-roam-start))
+      (defun my-org-roam-start ()
+        (when (boundp 'org-roam-directory)
+          (unless (file-exists-p org-roam-directory)
+            (make-directory org-roam-directory)))
+        (org-roam-db-autosync-mode)))
+    :bind (("C-c n f" . my-org-roam-node-find)
+           ("C-c n r" . org-roam-node-random)
+           ("C-c n z" . org-roam-ext-find-by-tag)
+           ("C-c n #" . org-roam-ext-find-by-tag)
+           (:map org-mode-map
+                 (("C-c n i" . org-roam-node-insert)
+                  ("C-c n o" . org-id-get-create)
+                  ("C-c n t" . org-roam-tag-add)
+                  ("C-c n a" . org-roam-alias-add)
+                  ("C-c n l" . org-roam-buffer-toggle))))))
 ;; note(org-roam,end): zettelkasten
 
 (use-package org-roam-timestamps
@@ -1056,6 +1070,7 @@ and DATA."
   :ensure (:depth 1)
   :init
   (setq elfeed-search-filter "@2023-02-07T23:59 +unread ")
+  ;; note(elisp-lint,ignore,begin): indent
   :bind (:map elfeed-search-mode-map
          ("R" . elfeed-search-untag-all-unread---reversed)
          ("A" . elfeed-search--append-to-mpv-playlist---reversed)
@@ -1063,6 +1078,7 @@ and DATA."
          ("o" . elfeed-search--open-link)
          :map elfeed-show-mode-map
          ("C-c C-o" . elfeed-show-visit))
+  ;; note(elisp-lint,ignore,end): indent
   :config
   (progn
     (defun elfeed-search-untag-all-unread---reversed ()
@@ -1102,7 +1118,7 @@ and DATA."
         ;; kill elfeed-entry
         (elfeed-kill-buffer)))
     (defun elfeed-search--append-to-mpv-playlist---reversed ()
-      "Append YouTube video from Elfeed list/search to MPV playlist in reverse."
+      "Append video from Elfeed list/search to MPV playlist in reverse."
       (interactive)
       (elfeed-search--append-to-mpv-playlist)
       (forward-line -2))
@@ -1118,18 +1134,17 @@ and DATA."
 
 ;; note(elfeed,org,begin): elfeed config from org file
 (progn
-(use-package shr
-  :ensure nil
-  :config (setq shr-inhibit-images t))
+  (use-package shr
+    :ensure nil
+    :config (setq shr-inhibit-images t))
 
-(use-package elfeed-org
-  :ensure (:depth 1)
-  :after (elfeed shr)
-  :config
-  (progn
-    (setq rmh-elfeed-org-files (list (format "%s.org" elfeed-db-directory)))
-    (elfeed-org)))
-)
+  (use-package elfeed-org
+    :ensure (:depth 1)
+    :after (elfeed shr)
+    :config
+    (progn
+      (setq rmh-elfeed-org-files (list (format "%s.org" elfeed-db-directory)))
+      (elfeed-org))))
 ;; note(elfeed,org,end): elfeed config from org file
 
 ;; note(elfeed,youtube,begin): YouTube channels in Elfeed
@@ -1159,21 +1174,27 @@ and DATA."
       "URL of the currently played video."
       (interactive)
       (message (shell-command-to-string "mpv-playlist"))))
+  ;; note(elisp-lint,ignore,begin): indent
   :bind (:map elfeed-show-mode-map
          ("F" . elfeed-tube-fetch)
          ([remap save-buffer] . elfeed-tube-save)
          :map elfeed-search-mode-map
          ("F" . elfeed-tube-fetch)
-         ([remap save-buffer] . elfeed-tube-save)))
+         ([remap save-buffer] . elfeed-tube-save))
+  ;; note(elisp-lint,ignore,end): indent
+  )
 ;; note(elfeed,youtube,end): YouTube channels in Elfeed
 ;; note(elfeed,youtube,mpv,begin): Local playing
 (use-package elfeed-tube-mpv
   :ensure nil
   :after (elfeed-tube elfeed mpv)
+  ;; note(elisp-lint,ignore,begin): indent
   :bind (:map 'elfeed-show-mode-map
          ("C-c C-m" . #'elfeed-tube-mpv)
          ("C-c C-f" . #'elfeed-tube-mpv-follow-mode)
-         ("C-c C-w" . #'elfeed-tube-mpv-where)))
+         ("C-c C-w" . #'elfeed-tube-mpv-where))
+  ;; note(elisp-lint,ignore,end): indent
+  )
 ;; nitpick(elfeed-tube): bad recipe, deps fail to download
 (use-package mpv
   :ensure (:depth 1))
@@ -1329,62 +1350,60 @@ and DATA."
 
 ;; note(window,begin): navigation and selection
 (progn
-;; assumptions: C-x 2|3 = (split-window-below|right)
-;; hence: lowest ID = top-left, highest = bot-right
-(defun window-id(window)
-  "Return numeric WINDOW ID."
-  (let ((win-name (format "%s" win))
-        (pattern "^#<window \\([0-9]+\\)"))
-    (string-match pattern win-name)
-    (string-to-number (match-string 1 win-name))))
+  ;; assumptions: C-x 2|3 = (split-window-below|right)
+  ;; hence: lowest ID = top-left, highest = bot-right
+  (defun window-id(window)
+    "Return numeric WINDOW ID."
+    (let ((win-name (format "%s" window))
+          (pattern "^#<window \\([0-9]+\\)"))
+      (string-match pattern win-name)
+      (string-to-number (match-string 1 win-name))))
 
-(defun window-list-sorted()
-  "Sort (window-list) by their IDs (ascending)."
-  (sort (window-list)
-        (lambda (left right) (< (window-id left) (window-id right)))))
+  (defun window-list-sorted()
+    "Sort (window-list) by their IDs (ascending)."
+    (sort (window-list)
+          (lambda (left right) (< (window-id left) (window-id right)))))
 
-(defun go-to-first-window()
-  "Navigate to the first open window (lowest ID) in frame."
-  (interactive)
-  (let ((continue t))
-    (while continue
-      (other-window 1)
-      (when (eq (seq-position (window-list-sorted) (get-buffer-window)) 0)
-        (setq continue nil)))))
-)
+  (defun go-to-first-window()
+    "Navigate to the first open window (lowest ID) in frame."
+    (interactive)
+    (let ((continue t))
+      (while continue
+        (other-window 1)
+        (when (eq (seq-position (window-list-sorted) (get-buffer-window)) 0)
+          (setq continue nil))))))
 ;; note(window,end): navigation and selection
 
 ;; note(window,begin): rotation
 (progn
-(defun rotate-windows(orientation)
-  "Rotate windows layout by ORIENTATION (h)orizontally or (v)ertically."
-  (let ((current-buff (buffer-name (current-buffer))))
-    (go-to-first-window)
-    (let ((buffs (windows-to-buffers (window-list))))
-      (delete-other-windows)
-      (dolist (item buffs)
-        (window--display-buffer
-         item (get-buffer-window) 'reuse)
-        (if (string-equal orientation "h")
-            (split-window-right)
-          (split-window-below))
-        (other-window 1)
-        (balance-windows))
-      (my-call-if-defined delete-window)
-      (balance-windows)
-      (while (not (eq current-buff (buffer-name (current-buffer))))
-        (other-window 1)))))
+  (defun rotate-windows(orientation)
+    "Rotate windows layout by ORIENTATION (h)orizontally or (v)ertically."
+    (let ((current-buff (buffer-name (current-buffer))))
+      (go-to-first-window)
+      (let ((buffs (windows-to-buffers (window-list))))
+        (delete-other-windows)
+        (dolist (item buffs)
+          (window--display-buffer
+           item (get-buffer-window) 'reuse)
+          (if (string-equal orientation "h")
+              (split-window-right)
+            (split-window-below))
+          (other-window 1)
+          (balance-windows))
+        (my-call-if-defined delete-window)
+        (balance-windows)
+        (while (not (eq current-buff (buffer-name (current-buffer))))
+          (other-window 1)))))
 
-(defun rotate-windows-horizontally()
-  "Rotate windows layout horizontally."
-  (interactive)
-  (rotate-windows "h"))
+  (defun rotate-windows-horizontally()
+    "Rotate windows layout horizontally."
+    (interactive)
+    (rotate-windows "h"))
 
-(defun rotate-windows-vertically()
-  "Rotate windows layout vertically."
-  (interactive)
-  (rotate-windows "v"))
-)
+  (defun rotate-windows-vertically()
+    "Rotate windows layout vertically."
+    (interactive)
+    (rotate-windows "v")))
 ;; note(window,end): rotation
 
 ;; Save desktop only when not screwed up while loading
@@ -1478,9 +1497,11 @@ and DATA."
                           (interactive)
                           (unwind-protect
                               (progn
-                                (advice-add 'delete-process :override #'terminate-process)
+                                (advice-add 'delete-process :override
+                                            #'terminate-process)
                                 (process-menu-delete-process))
-                            (advice-remove 'delete-process #'terminate-process))))
+                            (advice-remove 'delete-process
+                                           #'terminate-process))))
             (define-key process-menu-mode-map (read-kbd-macro "D")
                         #'process-menu-delete-process)))
 ;;; .emacs ends here

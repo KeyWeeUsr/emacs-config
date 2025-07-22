@@ -174,11 +174,50 @@ jobs:
                     (relint-file file)
                     (when err
                       (error "Relint found issues")))
-                  (let (err)
-                    (advice-add 'elisp-lint--print :override
-                                (lambda (_color format-string &rest arguments)
-                                  (setq err t)
-                                  (message "%s" arguments)))
+                  (let ((indent-tabs-mode nil) (fill-column 79)
+                        ignored ignore-tmp ignore-kind
+                        (ignore-begin "note(elisp-lint,ignore,begin):")
+                        (ignore-end "note(elisp-lint,ignore,end):")
+                        err)
+                    (with-temp-buffer
+                      (insert-file-contents-literally file)
+                      (while (re-search-forward ignore-begin nil t)
+                        (setq ignore-kind nil)
+                        (setq ignore-tmp nil)
+                        (when (re-search-forward "\\\\([a-z-]+\\\\)")
+                          (setq ignore-kind (intern (match-string 1))))
+                        (goto-char (1+ (line-end-position)))
+                        (push (line-number-at-pos) ignore-tmp)
+                        (re-search-forward ignore-end)
+                        (push (line-number-at-pos) ignore-tmp)
+                        (push (reverse ignore-tmp)
+                              (alist-get ignore-kind ignored))))
+                    (advice-add
+                     'elisp-lint--print :override
+                     (lambda (_color format-string &rest args)
+                        (catch 'ignore
+                          (let ((text (string-join args " ")) (line -1))
+                            (when (string-match ".emacs:\\\\([0-9]+\\\\):"
+                                                text)
+                              (setq line (string-to-number
+                                          (match-string 1 text))))
+
+                            (dolist (kind '(indent check-declare))
+                              (dolist (indent-ignore (alist-get kind ignored))
+                                (when (and (>= line (car indent-ignore))
+                                           (< line (cadr indent-ignore)))
+                                  (throw 'ignore t))))
+
+                            (when (and (string-match "depend on" text)
+                                       (string-match "use-package" text))
+                              (throw 'ignore t))
+                            (when (string-match "(package-lint-.*?)" text)
+                              (throw 'ignore t))
+                            (when (string-match ".*check-declare.*.emacs.el.*"
+                                                text)
+                              (throw 'ignore t))
+                          (setq err t)
+                          (message "%s" args)))))
                     (require 'elisp-lint)
                     (elisp-lint-file ".emacs")
                     (when err
