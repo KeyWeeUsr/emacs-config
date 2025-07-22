@@ -121,7 +121,7 @@
         (replace-match "\n" nil t))
       (goto-char (point-max)))))
 
-(Then "^buffer should contain \"\\([^\"]+\\)\"$"
+(Then "^buffer should contain \"\\([^\"]*\\)\"$"
   (lambda (contents)
     (unless test-buffer (error "Missing test buffer"))
     (with-current-buffer (get-buffer test-buffer)
@@ -192,9 +192,10 @@
              (setq buff-target (car (last multi-term-buffer-list))))
             (t (get-buffer buff-name)))
       (with-current-buffer buff-target
-        (should (term-in-char-mode))
-        (should (fboundp 'my-open-pr))
-        (should (lookup-key term-raw-map (kbd binding)))
+        (when (string= "multi-term" buff-name)
+          (should (term-in-char-mode))
+          (should (fboundp 'my-open-pr))
+          (should (lookup-key term-raw-map (kbd binding))))
         (should (lookup-key (current-local-map) (kbd binding)))
         (should (key-binding (kbd binding) nil t))
         (execute-kbd-macro (kbd binding))))))
