@@ -185,6 +185,7 @@ Optional argument ATTEMPTS-LEFT limits the recursion."
   (elpaca elpaca-use-package (elpaca-use-package-mode)))
 
 ;; constants, etc
+(defconst my-advice-prefix "my-advice")
 (defvar my-epa-file-encrypt-to "")
 (defmacro my-call-if-defined (func &rest args)
   "Call FUNC with ARGS if present, or report an error.
@@ -298,7 +299,7 @@ loaded symbols such as the ones from window.el."
       (setq ns-command-modifier 'meta)
       (setq mac-command-modifier 'meta))
     (advice-add 'ns-print-buffer :override (lambda (&rest _))
-                '((name . "mac-keyboard")))
+                `((name . ,(format "%s-mac-keyboard" my-advice-prefix))))
     (setq exec-path (append '("/opt/homebrew/bin") exec-path)))
 
   (use-package tool-bar
@@ -576,8 +577,8 @@ and DATA."
   (progn
     (ac-config-default)
     (setq ac-use-menu-map t)
-    (advice-add 'create-file-buffer
-                :after (lambda (&rest _) (acon))))
+    (advice-add 'create-file-buffer :after (lambda (&rest _) (acon))
+                `((name . ,(format "%s-ac-in-new-buffer" my-advice-prefix)))))
   :init
   (progn
     (defun ac-onoff (flag)
@@ -821,7 +822,8 @@ and DATA."
                                 (call-interactively 'org-time-stamp-inactive))
                               (buffer-string))))))
     (advice-remove 'org-insert-todo-heading 'my-org-insert-todo-heading)
-    (advice-add 'org-insert-todo-heading :around 'my-org-insert-todo-heading)))
+    (advice-add 'org-insert-todo-heading :around #'my-org-insert-todo-heading
+                `((name . ,(format "%s-auto-insert-todo" my-advice-prefix))))))
 
 ;; note(org-roam,begin): zettelkasten
 (progn
@@ -1316,12 +1318,13 @@ and DATA."
           (insert (read-string "Language "))
           (end-of-line)
           (insert "\n"))))
-    (advice-add
-     'org-insert-structure-template
-     :before #'patch-org-insert-structure-template)
-    (advice-add
-     'org-tempo-complete-tag
-     :after #'patch-org-tempo-complete-tag)
+    (advice-add 'org-insert-structure-template :before
+                #'patch-org-insert-structure-template
+                `((name . ,(format "%s-name-org-src-block" my-advice-prefix))))
+    (advice-add 'org-tempo-complete-tag :after
+                #'patch-org-tempo-complete-tag
+                `((name . ,(format "%s-name-org-tempo-src-block"
+                                   my-advice-prefix))))
     ;; note(org,end): append name to org-mode's source block
     ))
 
@@ -1417,7 +1420,8 @@ and DATA."
    (if (file-exists-p
         (expand-file-name (concat desktop-dirname desktop-base-file-name)))
        (when (bound-and-true-p my-desktop-save) (apply fn args))
-     (apply fn args))))
+     (apply fn args)))
+ `((name . ,(format "%s-safe-desktop-save" my-advice-prefix))))
 
 ;; Popup for keybindings
 (use-package which-key
