@@ -346,9 +346,10 @@ loaded symbols such as the ones from window.el."
   (add-hook 'kill-emacs-query-functions 'custom-exit))
 
 ;; note(cve,begin): exploits and other fixes
-;; 1) LaTeX & Org exploit fix
-(when (and (< emacs-major-version 29)
-           (< emacs-minor-version 3))
+;; https://www.cve.org/CVERecord?id=CVE-2024-30204
+(when (or (< emacs-major-version 29)
+          (and (<= emacs-major-version 29)
+               (< emacs-minor-version 3)))
   (with-no-warnings
     ;; note(free-var): backward compatible to older versions
     (setq org-preview-latex-default-process 'verbatim)))
