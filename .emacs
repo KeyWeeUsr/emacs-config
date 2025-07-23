@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016 - 2025, KeyWeeUsr(Peter Badida) <keyweeusr@gmail.com>
 
 ;; Author: KeyWeeUsr
-;; Version: 6.4
+;; Version: 6.5
 
 ;; (elpaca)
 ;; Package-Requires: ((emacs "27.1"))
@@ -252,7 +252,7 @@ loaded symbols such as the ones from window.el."
 (defun migdate ()
   "Current date for file migrations."
   (interactive)
-  (shell-command "date \"+%Y%m%d%H%M%S\""))
+  (format-time-string "%Y%m%d%H%M%S"))
 
 (defun my-move (left-top)
   "Move window to comma-separated LEFT-TOP location."
