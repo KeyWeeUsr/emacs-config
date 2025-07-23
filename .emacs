@@ -323,10 +323,6 @@ loaded symbols such as the ones from window.el."
   (require 'org-roam-db)
   (progn
     (progn
-      (message "Deleting MPV playlist")
-      (delete-file "/tmp/mpvplaylist")
-      t)
-    (progn
       (message "Deleting org-roam DB")
       (if (not (boundp 'org-roam-db-location))
           (progn (warn "Missing org-roam-db-location")
@@ -1102,22 +1098,6 @@ and DATA."
         ;; tag so it doesn't get lost
         (elfeed-show-tag 'in-playlist)
         (elfeed-show-untag 'unread)
-        ;; not necessary with playlist tagging
-        ;; ;; tmp file because MPV can crash and drop remaining parts
-        ;; (save-window-excursion
-        ;;   (find-file "/tmp/mpvplaylist")
-        ;;   (end-of-buffer)
-        ;;   (open-line 1)
-        ;;   (forward-char)
-        ;;   (insert (shell-command-to-string "mpv-last"))
-        ;;   (backward-delete-char-untabify 2)
-        ;;   (move-beginning-of-line 1)
-        ;;   (delete-char)
-        ;;   (move-end-of-line 1)
-        ;;   (open-line 1)
-        ;;   (forward-char)
-        ;;   (save-buffer)
-        ;;   (kill-buffer))
         ;; kill elfeed-entry
         (elfeed-kill-buffer)))
     (defun elfeed-search--append-to-mpv-playlist---reversed ()
