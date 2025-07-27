@@ -1,5 +1,7 @@
-# act -j compile --use-new-action-cache --action-offline-mode
-# act -j test --use-new-action-cache --action-offline-mode
+# act -j compile|test \
+#     --use-new-action-cache \
+#     --action-offline-mode \
+#     --cache-server-addr 127.0.0.1
 
 # todo(artifacts): ~/.emacs.d/elpa,elpaca; chown -R 1000:1000, tgz, sign
 name: CI
