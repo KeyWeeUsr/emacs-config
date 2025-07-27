@@ -131,7 +131,8 @@
                          (while (search-forward "\\n" nil t)
                            (replace-match "\n" nil t))
                          (buffer-string))
-                       (buffer-string))))))
+                       (buffer-substring-no-properties
+                        (point-min) (point-max)))))))
 
 (Then "^minor mode \"\\([^\"]+\\)\" should be active$"
   (lambda (mode-name)
