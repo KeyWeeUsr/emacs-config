@@ -14,7 +14,7 @@
     (should (string= buff-name
                      (buffer-name (window-buffer (selected-window)))))))
 
-(When "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\" without queries$"
-  (lambda (binding buff-name)
+(When "^I press \"\\([^\"]+\\)\" without queries$"
+  (lambda (binding)
     (let ((kill-buffer-query-functions nil))
-      (When "I press \"%s\" in buffer \"%s\"" binding buff-name))))
+      (When "I press \"%s\"" binding))))

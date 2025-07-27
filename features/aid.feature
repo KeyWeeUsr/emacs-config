@@ -86,16 +86,17 @@ Feature: Editing aid
   Scenario: Opening a pull request through remote reference
     Given emacs loads
     And multi-term terminal launches
+    And test buffer is multi-term
     And emacs reads output
     And multi-term buffer contains "Create a pull request\nremote: http://localhost\nremote:"
     And emacs reads output
     And point in multi-term buffer is at "point-max"
 
-    When I press "C-c C-o" in buffer "multi-term"
+    When I press "C-c C-o"
     Then binding "C-c C-o" should exist in map "term-raw-map"
     And binding "C-c C-o" should exist in map "current-local-map"
     And browser should open "http://localhost" url
 
-    When I press "C-d" in buffer "multi-term"
+    When I press "C-d"
     And emacs reads output
     Then no multi-term buffer should remain open

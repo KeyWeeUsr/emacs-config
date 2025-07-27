@@ -184,17 +184,10 @@
                     (buffer-string)))))
       (term-char-mode))))
 
-(When "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
-  (lambda (binding buff-name)
-    (let ((buff-target buff-name))
-      (cond ((string= "multi-term" buff-name)
-             (setq buff-target (car (last multi-term-buffer-list))))
-            (t (get-buffer buff-name)))
-      (with-current-buffer buff-target
-        (when (string= "multi-term" buff-name)
-          (should (term-in-char-mode))
-          (should (fboundp 'my-open-pr)))
-        (execute-kbd-macro (kbd binding))))))
+(When "^I press \"\\([^\"]+\\)\"$"
+  (lambda (binding)
+    (with-current-buffer test-buffer
+      (execute-kbd-macro (kbd binding)))))
 
 (Then "^binding \"\\([^\"]+\\)\" should exist in map \"\\([^\"]+\\)\"$"
   (lambda (binding raw-map)
