@@ -1,7 +1,36 @@
 ;; -*- lexical-binding: t; -*-
 (Before)
 
-(After)
+(defvar bindings-mock-calls nil)
+;; todo: getting ## ("%S") as an argument, can't simplify and check properly
+(defun bindings-helpful-callable (sym)
+  (setq bindings-mock-calls (push "callable" bindings-mock-calls)))
+(defun bindings-helpful-variable (var)
+  (setq bindings-mock-calls (push "variable" bindings-mock-calls)))
+(defun bindings-helpful-key (key)
+  (setq bindings-mock-calls (push "key" bindings-mock-calls)))
+(defun bindings-helpful-command (cmd)
+  (setq bindings-mock-calls (push "command" bindings-mock-calls)))
+(Before
+ (setq bindings-mock-calls nil)
+ (advice-add 'helpful-callable :override #'bindings-helpful-callable
+             '((name . ecukes-test-bingings-helpful-callable)))
+ (advice-add 'helpful-variable :override #'bindings-helpful-variable
+             '((name . ecukes-test-bingings-helpful-variable)))
+ (advice-add 'helpful-key :override #'bindings-helpful-key
+             '((name . ecukes-test-bingings-helpful-key)))
+ (advice-add 'helpful-command :override #'bindings-helpful-command
+             '((name . ecukes-test-bingings-helpful-command))))
+
+(After
+ (dolist (name '(callable variable key command))
+   (let ((sym (intern (format "helpful-%s" name))))
+     (advice-mapc
+      (lambda (func props)
+        (when (string-prefix-p "ecukes-test-bindings-"
+                               (format "%s" (alist-get 'name props)))
+          (advice-remove sym func)))
+      sym))))
 
 (Given "^selected buffer is \"\\([^\"]+\\)\"$"
   (lambda (buff-name)
@@ -40,3 +69,13 @@
             ((string= "line" mode)
              (should-not (term-in-char-mode)))
             (t (error "Wrong mode: %S" mode))))))
+
+(When "^I press \"\\([^\"]+\\)\" in minibuffer$"
+  (lambda (binding)
+    (with-minibuffer-selected-window
+      (execute-kbd-macro (kbd binding)))))
+
+(Then "^helpful should open \"\\([^\"]+\\)\"$"
+  (lambda (arg)
+    (should (string= arg (car bindings-mock-calls)))
+    (should (= 1 (length bindings-mock-calls)))))

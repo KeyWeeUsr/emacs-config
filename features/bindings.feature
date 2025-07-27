@@ -74,3 +74,39 @@ Feature: Keyboard shortcuts
     When I press "C-d"
     And emacs reads output
     Then no multi-term buffer should remain open
+
+  Scenario: Helpful finds a callable (C-h f)
+    Given emacs loads
+    And test buffer is "callable"
+
+    When I press "C-h f"
+    And I press "abc" in minibuffer
+    And I press "RET" in minibuffer
+    Then helpful should open "callable"
+
+  Scenario: Helpful finds a variable (C-h v)
+    Given emacs loads
+    And test buffer is "callable"
+
+    When I press "C-h v"
+    And I press "abc" in minibuffer
+    And I press "RET" in minibuffer
+    Then helpful should open "variable"
+
+  Scenario: Helpful finds a keybinding (C-h k)
+    Given emacs loads
+    And test buffer is "callable"
+
+    When I press "C-h k"
+    And I press "abc" in minibuffer
+    And I press "RET" in minibuffer
+    Then helpful should open "key"
+
+  Scenario: Helpful finds a command (C-h x)
+    Given emacs loads
+    And test buffer is "callable"
+
+    When I press "C-h x"
+    And I press "abc" in minibuffer
+    And I press "RET" in minibuffer
+    Then helpful should open "command"
