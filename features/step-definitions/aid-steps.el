@@ -171,7 +171,6 @@
 (Given "^multi-term buffer contains \"\\([^\"]*\\)\"$"
   (lambda (contents)
     (with-current-buffer (car (last multi-term-buffer-list))
-      (accept-process-output nil 1)
       (let ((inhibit-read-only t))
         (save-excursion
           (term-mode)
@@ -182,8 +181,7 @@
                     (while (search-forward "\\n" nil t)
                       (replace-match "\n" nil t))
                     (buffer-string)))))
-      (term-char-mode)
-      (accept-process-output nil 1))))
+      (term-char-mode))))
 
 (When "^I press \"\\([^\"]+\\)\" in buffer \"\\([^\"]+\\)\"$"
   (lambda (binding buff-name)
@@ -207,7 +205,6 @@
 
 (Then "^no multi-term buffer should remain open$"
   (lambda ()
-    (accept-process-output nil 1)
     (should-not multi-term-buffer-list)))
 
 (Given "^mode \"\\([^\"]+\\)\" is active$"
@@ -223,7 +220,6 @@
   (lambda (input)
     (advice-add 'read-string :override (lambda (&rest _) "ASK")
                 '((name . ecukes-test-aid-read-string)))))
-
 
 (Then "^shortcut \"\\([^\"]+\\)\" should become \"\\([^\"]+\\)\"$"
   (lambda (contents result)

@@ -30,6 +30,13 @@
     (should test-buffer)
     (get-buffer-create test-buffer)))
 
+(When "^emacs reads output$"
+  (lambda ()
+    (let* ((default 0.3)
+           (env-timeout (getenv "TIMEOUT"))
+           (timeout (if env-timeout (string-to-number env-timeout) default)))
+      (accept-process-output nil timeout))))
+
 (Before)
 
 (After
