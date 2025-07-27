@@ -90,7 +90,9 @@ Feature: Editing aid
     And emacs reads output
     And multi-term buffer contains "Create a pull request\nremote: http://localhost\nremote:"
     And emacs reads output
-    And point in multi-term buffer is at "point-max"
+
+    Then point should be at "point-max"
+    And multi-term should be in "char" mode
 
     When I press "C-c C-o"
     Then binding "C-c C-o" should exist in map "term-raw-map"
