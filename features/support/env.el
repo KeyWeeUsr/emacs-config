@@ -30,6 +30,13 @@
     (should test-buffer)
     (get-buffer-create test-buffer)))
 
+(Given "^test buffer is multi-term$"
+  (lambda ()
+    (when test-buffer
+      (error "Test buffer was already set, bad cleanup!"))
+    (setq test-buffer (buffer-name (car (last multi-term-buffer-list))))
+    (should test-buffer)))
+
 (When "^emacs reads output$"
   (lambda ()
     (let* ((default 0.3)
