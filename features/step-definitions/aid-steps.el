@@ -192,11 +192,16 @@
       (with-current-buffer buff-target
         (when (string= "multi-term" buff-name)
           (should (term-in-char-mode))
-          (should (fboundp 'my-open-pr))
-          (should (lookup-key term-raw-map (kbd binding))))
-        (should (lookup-key (current-local-map) (kbd binding)))
-        (should (key-binding (kbd binding) nil t))
+          (should (fboundp 'my-open-pr)))
         (execute-kbd-macro (kbd binding))))))
+
+(Then "^binding \"\\([^\"]+\\)\" should exist in map \"\\([^\"]+\\)\"$"
+  (lambda (binding raw-map)
+    (let ((map (if (string= "current-local-map" raw-map) (current-local-map)
+                 (symbol-value (intern raw-map)))))
+      (should (lookup-key map (kbd binding)))
+      (when (string= "current-local-map" raw-map)
+        (should (key-binding (kbd binding) nil t))))))
 
 (Then "^browser should open \"\\([^\"]+\\)\" url$"
   (lambda (arg)

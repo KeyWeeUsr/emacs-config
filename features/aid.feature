@@ -92,7 +92,9 @@ Feature: Editing aid
     And point in multi-term buffer is at "point-max"
 
     When I press "C-c C-o" in buffer "multi-term"
-    Then browser should open "http://localhost" url
+    Then binding "C-c C-o" should exist in map "term-raw-map"
+    And binding "C-c C-o" should exist in map "current-local-map"
+    And browser should open "http://localhost" url
 
     When I press "C-d" in buffer "multi-term"
     And emacs reads output
