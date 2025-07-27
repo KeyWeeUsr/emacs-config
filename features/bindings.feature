@@ -46,3 +46,31 @@ Feature: Keyboard shortcuts
     When I press "C-d"
     And emacs reads output
     Then no multi-term buffer should remain open
+
+  Scenario: Multi-term switching between buffer and line mode
+    Given emacs loads
+    And multi-term terminal launches
+    And test buffer is multi-term
+    And emacs reads output
+
+    Then point should be at "line-end"
+    And multi-term should be in "char" mode
+
+    When I press "C-c C-k"
+    And emacs reads output
+    Then point should be at "line-end"
+    And multi-term should be in "char" mode
+
+    When I press "C-c C-j"
+    And emacs reads output
+    Then point should be at "line-beginning"
+    And multi-term should be in "line" mode
+
+    When I press "C-c C-k"
+    And emacs reads output
+    Then point should be at "line-end"
+    And multi-term should be in "char" mode
+
+    When I press "C-d"
+    And emacs reads output
+    Then no multi-term buffer should remain open
