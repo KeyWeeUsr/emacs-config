@@ -544,6 +544,15 @@ jobs:
                       ;; note: C-set "noninteractive" blocks some functionality
                       ;;       so exclude tests relying on it
                       (ecukes-exclude-tags '("interactive-only")))
+                  (when (= emacs-major-version 27)
+                    (when (= emacs-minor-version 1)
+                      (setq ecukes-exclude-tags
+                            (push "not-runnable-on-27.1"
+                                   ecukes-exclude-tags)))
+                    (when (= emacs-minor-version 2)
+                      (setq ecukes-exclude-tags
+                            (push "not-runnable-on-27.2"
+                                  ecukes-exclude-tags))))
                   (when features
                     (setq features
                           (delete (car (f-glob "install.feature"
