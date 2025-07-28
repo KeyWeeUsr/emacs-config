@@ -1,6 +1,5 @@
 Feature: Keyboard shortcuts
-  @not-runnable-on-27.1
-  @not-runnable-on-27.2
+  @not-runnable-on-27.1 @not-runnable-on-27.2
   Scenario: Opening a multi-term instance for current directory in any buffer
     Given emacs loads
     And test buffer is "global-side-terminal"
