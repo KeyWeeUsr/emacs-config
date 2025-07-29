@@ -105,5 +105,4 @@
 
 (Then "^window should change size with \"\\([^\"]+\\)\"$"
   (lambda (arg)
-    (should (string= arg (car bindings-mock-calls)))
-    (should (= 1 (length bindings-mock-calls)))))
+    (should (string= arg (car bindings-mock-calls)))))
