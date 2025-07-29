@@ -19,6 +19,7 @@
 
 (defvar tests-run 0)
 (defvar test-buffer nil)
+(defvar test-buffer-window-properties nil)
 
 ;; (Setup)
 
@@ -51,6 +52,8 @@
  (when test-buffer
    (kill-buffer (get-buffer-create test-buffer)))
  (setq test-buffer nil)
- (should-not test-buffer))
+ (should-not test-buffer)
+ (setq test-buffer-window-properties nil)
+ (should-not test-buffer-window-properties))
 
 ;; (Teardown)

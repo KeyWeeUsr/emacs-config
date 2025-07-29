@@ -11,6 +11,16 @@
   (setq bindings-mock-calls (push "key" bindings-mock-calls)))
 (defun bindings-helpful-command (cmd)
   (setq bindings-mock-calls (push "command" bindings-mock-calls)))
+(defun bindings-shrink-window (arg)
+  (setq bindings-mock-calls (push "shrink-window" bindings-mock-calls)))
+(defun bindings-enlarge-window (arg)
+  (setq bindings-mock-calls (push "enlarge-window" bindings-mock-calls)))
+(defun bindings-shrink-window-horizontally (arg)
+  (setq bindings-mock-calls (push "shrink-window-horizontally"
+                                  bindings-mock-calls)))
+(defun bindings-enlarge-window-horizontally (arg)
+  (setq bindings-mock-calls (push "enlarge-window-horizontally"
+                                  bindings-mock-calls)))
 (Before
  (setq bindings-mock-calls nil)
  (advice-add 'helpful-callable :override #'bindings-helpful-callable
@@ -20,7 +30,18 @@
  (advice-add 'helpful-key :override #'bindings-helpful-key
              '((name . ecukes-test-bingings-helpful-key)))
  (advice-add 'helpful-command :override #'bindings-helpful-command
-             '((name . ecukes-test-bingings-helpful-command))))
+             '((name . ecukes-test-bingings-helpful-command)))
+
+ (advice-add 'shrink-window :override #'bindings-shrink-window
+             '((name . ecukes-test-bingings-shrink-window)))
+ (advice-add 'enlarge-window :override #'bindings-enlarge-window
+             '((name . ecukes-test-bingings-enlarge-window)))
+ (advice-add 'shrink-window-horizontally
+             :override #'bindings-shrink-window-horizontally
+             '((name . ecukes-test-bingings-shrink-window-horizontally)))
+ (advice-add 'enlarge-window-horizontally
+             :override #'bindings-enlarge-window-horizontally
+             '((name . ecukes-test-bingings-enlarge-window-horizontally))))
 
 (After
  (dolist (name '(callable variable key command))
@@ -36,7 +57,9 @@
   (lambda (buff-name)
     (let ((buff (get-buffer buff-name)))
       (display-buffer buff)
-      (select-window (get-buffer-window buff)))))
+      (select-window (get-buffer-window buff))
+      (setq test-buffer-window-properties
+            (cddr (window-state-get (selected-window)))))))
 
 (Then "^selected buffer should be \"\\([^\"]+\\)\"$"
   (lambda (buff-name)
@@ -76,6 +99,11 @@
       (execute-kbd-macro (kbd binding)))))
 
 (Then "^helpful should open \"\\([^\"]+\\)\"$"
+  (lambda (arg)
+    (should (string= arg (car bindings-mock-calls)))
+    (should (= 1 (length bindings-mock-calls)))))
+
+(Then "^window should change size with \"\\([^\"]+\\)\"$"
   (lambda (arg)
     (should (string= arg (car bindings-mock-calls)))
     (should (= 1 (length bindings-mock-calls)))))

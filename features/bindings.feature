@@ -111,3 +111,39 @@ Feature: Keyboard shortcuts
     And I press "abc" in minibuffer
     And I press "RET" in minibuffer
     Then helpful should open "command"
+
+  Scenario: Window enlarges horizontally
+    Given emacs loads
+    And test buffer is "enlarges-horizontally"
+    And selected buffer is "enlarges-horizontally"
+
+    When I press "C-c <right>"
+    And emacs reads output
+    Then window should change size with "enlarge-window-horizontally"
+
+  Scenario: Window shrinks horizontally
+    Given emacs loads
+    And test buffer is "shrink-horizontally"
+    And selected buffer is "shrink-horizontally"
+
+    When I press "C-c <left>"
+    And emacs reads output
+    Then window should change size with "shrink-window-horizontally"
+
+  Scenario: Window enlarges vertically
+    Given emacs loads
+    And test buffer is "enlarges-vertically"
+    And selected buffer is "enlarges-vertically"
+
+    When I press "C-c <down>"
+    And emacs reads output
+    Then window should change size with "enlarge-window"
+
+  Scenario: Window shrinks vertically
+    Given emacs loads
+    And test buffer is "shrink-vertically"
+    And selected buffer is "shrink-vertically"
+
+    When I press "C-c <up>"
+    And emacs reads output
+    Then window should change size with "shrink-window"
