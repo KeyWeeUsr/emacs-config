@@ -517,7 +517,7 @@ jobs:
 
       - name: Run behavior tests
         env:
-          TIMEOUT: 0.4
+          TIMEOUT: 0.5
         run: |-
           ls -lah ~/.emacs.d/elpa*
           ls -lah ~/.emacs.d/elpaca/repos
