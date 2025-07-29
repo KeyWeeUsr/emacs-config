@@ -1196,13 +1196,22 @@ and DATA."
 ;; note(helpful,end): Better help pages
 
 ;; note(window,begin): Bindings for quicker window size and buffer manipulation
-(use-package window
-  :ensure nil
-  :bind (("C-c <up>" . (my-call-if-defined shrink-window))
-         ("C-c <down>" . (my-call-if-defined enlarge-window))
-         ("C-c <left>" . (my-call-if-defined shrink-window-horizontally))
-         ("C-c <right>" . (my-call-if-defined enlarge-window-horizontally))
-         ("<f12>" . (my-call-if-defined kill-buffer-and-window))))
+;; note(window): not available as use-package for tests
+(global-set-key (kbd "C-c <up>")
+                (lambda () (interactive)
+                  (my-call-if-defined shrink-window 1)))
+(global-set-key (kbd "C-c <down>")
+                (lambda () (interactive)
+                  (my-call-if-defined enlarge-window 1)))
+(global-set-key (kbd "C-c <left>")
+                (lambda () (interactive)
+                  (my-call-if-defined shrink-window-horizontally 1)))
+(global-set-key (kbd "C-c <right>")
+                (lambda () (interactive)
+                  (my-call-if-defined enlarge-window-horizontally 1)))
+(global-set-key (kbd "<f12>")
+                (lambda () (interactive)
+                  (my-call-if-defined kill-buffer-and-window)))
 ;; note(window,end): Bindings for quicker window size and buffer manipulation
 
 ;; note(unindent,begin): https://stackoverflow.com/a/2250155/5994041
